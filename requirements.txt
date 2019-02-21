@@ -1,2 +1,4 @@
 influxdb
-psutil
+psutil>=5.3.0
+trio
+pyyaml
