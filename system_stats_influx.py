@@ -269,7 +269,6 @@ def main(args):
     interrupt = GracefulKiller()
     influx_args = {x: args[x]
                    for x in ["host", "port", "username", "password", "database"]}
-    print(influx_args["username"])
     if not args["dry_run"]:
         client = influxdb.InfluxDBClient(**influx_args)
     stats_classes = [CPUStats(), MemoryStats(), DiskStorageStats(args["disk_paths"]),
