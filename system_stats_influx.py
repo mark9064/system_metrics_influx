@@ -42,9 +42,17 @@ Point monitors sampled
 Data pushed to database
 target_time set
 next iteration
+
+TODO
+
+check types on logfile parse
+cython version
+better error handling
 """
 # pylint: disable=no-member, logging-format-interpolation
 import argparse
+import collections
+import copy
 import logging
 import math
 import os
@@ -328,71 +336,68 @@ async def collect_stats(continuous_stats, stats_classes):
 
 def initial_argparse():
     """Parses command line args"""
-    args_lookup = {"save-rate": "save_rate", "disk-paths": "disk_paths",
-                   "max-consecutive-errors": "error_limit", "dry-run": "dry_run",
-                   "logfile-path": "logfile_path", "log-stdout": "log_stdout"}
-    arg_defaults = dict(config_file=None, username="root", password="root",
-                        host="localhost", port=8086, database="system_stats",
-                        save_rate=1, disk_paths=["/"], error_limit=0, dry_run=False,
-                        logfile_path=None, log_stdout=False, pidfile=None)
+    cmd_args = collections.OrderedDict([
+        ["config_file", dict(cmd_name="config-file", default=None, type=[None, str],
+                             help="Specify path to config file. The command line options override "
+                             "the config file. Example config file in example_config.yaml")],
+        ["username", dict(cmd_name="username", default="root", type=str,
+                          help="Username for influxdb. Default is root")],
+        ["password", dict(cmd_name="password", default="root", type=str,
+                          help="Password for influxdb. Default is root")],
+        ["host", dict(cmd_name="host", default="localhost", type=str,
+                      help="Host for influxdb. Default is root")],
+        ["port", dict(cmd_name="port", default=8086, type=int,
+                      help="Port for influxdb. Default is root")],
+        ["database", dict(cmd_name="database", default="system_stats", type=str,
+                          help="Database name for influxdb. Default is root")],
+        ["save_rate", dict(cmd_name="save-rate", default=1, type=int,
+                           help="Sets how often the stats are saved to influx, in seconds. "
+                           "Default is 1, must be a non zero integer")],
+        ["disk_paths", dict(cmd_name="disk-paths", default=["/"], nargs="*", type=str,
+                            help="Sets the mountpoints used for disk monitoring (space used only, "
+                            "io is global). Default is /, multiple args should be seperated "
+                            "with a space e.g '--disk-paths / /boot/efi'. Trailing slash on "
+                            "mountpoint is optional. No args disables disk monitoring.")],
+        ["error_limit", dict(cmd_name="max-consecutive-errors", default=0, type=int,
+                             help="Sets the max limit for consecutive errors, which the the  "
+                             "program will exit at if reached. An error can occur once per save "
+                             "cycle. Default is 0 (never exit)")],
+        ["dry_run", dict(cmd_name="dry-run", default=False, type=bool, action="store_true",
+                         help="Skips writing any data to influx and instead prints it "
+                         "to stdout. Useful only for testing. A valid influx database "
+                         "is not required when running in this mode.")],
+        ["logfile_path", dict(cmd_name="logfile-path", default=None, type=[None, str],
+                              help="Sets the path to the desired logfile. By default a logfile "
+                              "is not created.")],
+        ["log_stdout", dict(cmd_name="log-stdout", default=False, type=bool, action="store_true",
+                            help="Enables logging to stdout")],
+        ["pidfile", dict(cmd_name="pidfile", default=None, type=[None, str],
+                         help="Enables writing a pidfile to the specified location. "
+                         "File is removed when the program exits. "
+                         "Any existing file will be overwritten.")]])
     parser = argparse.ArgumentParser()
-    parser.add_argument("--config-file", dest="config_file", default=arg_defaults["config_file"],
-                        type=str,
-                        help="Specify path to config file. The command line options override the "
-                        " config file. Example config file in example_config.yaml")
-    parser.add_argument("--username", dest="username", default=arg_defaults["username"], type=str,
-                        help="Username for influxdb. Default is root")
-    parser.add_argument("--password", dest="password", default=arg_defaults["password"], type=str,
-                        help="Password for influxdb. Default is root")
-    parser.add_argument("--host", dest="host", default=arg_defaults["host"], type=str,
-                        help="Host for influxdb. Default is localhost")
-    parser.add_argument("--port", dest="port", default=arg_defaults["port"], type=int,
-                        help="Port for influxdb. Default is 8086")
-    parser.add_argument("--database", dest="database", default=arg_defaults["database"], type=str,
-                        help="Database name for influxdb. Default is system_stats")
-    parser.add_argument("--save-rate", dest="save_rate", default=arg_defaults["save_rate"],
-                        type=int,
-                        help="Sets how often the stats are saved to influx, in seconds. "
-                        "Default is 1, must be a non zero integer")
-    parser.add_argument("--disk-paths", dest="disk_paths", default=arg_defaults["disk_paths"],
-                        nargs="*", type=str,
-                        help="Sets the mountpoints used for disk monitoring (space used only, "
-                        "io is global). Default is /, multiple args should be seperated "
-                        "with a space e.g '--disk-paths / /boot/efi'. Trailing slash on "
-                        "mountpoint is optional. No args disables disk monitoring.")
-    parser.add_argument("--max-consecutive-errors", dest="error_limit",
-                        default=arg_defaults["error_limit"], type=int,
-                        help="Sets the max limit for consecutive errors, which the the program "
-                        "will exit at if reached. An error can occur once per save "
-                        "cycle. Default is 0 (never exit)")
-    parser.add_argument("--dry-run", dest="dry_run", action="store_true",
-                        help="Skips writing any data to influx and instead prints it "
-                        "to stdout. Useful only for testing. A valid influx database "
-                        "is not required when running in this mode.")
-    parser.add_argument("--logfile-path", dest="logfile_path",
-                        default=arg_defaults["logfile_path"], type=str,
-                        help="Sets the path to the desired logfile. By default a logfile "
-                        "is not created.")
-    parser.add_argument("--log-stdout", dest="log_stdout", action="store_true",
-                        help="Enables logging to stdout")
-    parser.add_argument("--pidfile", dest="pidfile", default=arg_defaults["pidfile"], type=str,
-                        help="Enables writing a pidfile to the specified location. "
-                        "File is removed when the program exits. "
-                        "Any existing file will be overwritten.")
+    format_dict = copy.deepcopy(cmd_args)
+    for key, value in format_dict.items():
+        if isinstance(value["type"], list):
+            value["type"] = value["type"][1]
+        elif "action" in value:
+            if value["action"] == "store_true":
+                del value["type"]
+        name = "--{0}".format(value["cmd_name"])
+        del value["cmd_name"]
+        del value["default"]
+        parser.add_argument(name, dest=key, **value)
+
     args = vars(parser.parse_args())
+    specified = {}
+    for key, value in args.items():
+        if value is None:
+            args[key] = cmd_args[key]["default"]
+            specified[key] = False
+        else:
+            specified[key] = True
     if args["config_file"] is not None:
-        with open(args["config_file"], "r") as stream:
-            args_new = yaml.safe_load(stream)
-        args_new_formatted = {}
-        for key, value in args_new.items():
-            if key in args_lookup:
-                args_new_formatted[args_lookup[key]] = value
-            else:
-                args_new_formatted[key] = value
-        args_new = args_new_formatted
-        for key, value in args_new.items():
-            if args[key] == arg_defaults[key]:
-                args[key] = value
+        args = parse_config_file(args, cmd_args, specified)
     if args["save_rate"] <= 0:
         raise ValueError("Save rate must be a non zero positive integer")
     if args["logfile_path"] is not None:
@@ -409,6 +414,38 @@ def initial_argparse():
             raise FileNotFoundError("Invalid mountpoint specified")
     return args
 
+def parse_config_file(args, cmd_args, specifed):
+    """Parses the config file and type checks it"""
+    with open(args["config_file"], "r") as stream:
+        args_new = yaml.safe_load(stream)
+    args_new_formatted = {}
+    lookup = {v["cmd_name"]: k for k, v in cmd_args.items()}
+    for key, value in args_new.items():
+        args_new_formatted[lookup[key]] = value
+    args_new = args_new_formatted
+    for key, value in args_new.items():
+        allowed_type = cmd_args[key]["type"]
+        error = ""
+        if isinstance(allowed_type, list):
+            if (value is not None) and (not isinstance(value, allowed_type[1])):
+                error = "{0} or None".format(allowed_type[1].__name__)
+        elif not isinstance(value, allowed_type):
+            error = allowed_type.__name__
+        if "nargs" in cmd_args[key]:
+            if cmd_args[key]["nargs"] == "*":
+                error = ""
+                if not isinstance(value, list):
+                    error = "list"
+                else:
+                    for item in value:
+                        if not isinstance(item, allowed_type):
+                            error = "{0} inside list".format(allowed_type.__name__)
+        if error:
+            raise TypeError("Option {0} in config file is not type {1}"
+                            .format(cmd_args[key]["cmd_name"], error))
+        if not specifed[key]:
+            args[key] = value
+    return args
 
 def create_sublogger(level, path=None):
     """Sets up a sublogger"""
