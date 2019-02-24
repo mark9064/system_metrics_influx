@@ -45,7 +45,6 @@ next iteration
 
 TODO
 
-check types on logfile parse
 cython version
 better error handling
 """
