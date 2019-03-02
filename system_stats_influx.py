@@ -306,6 +306,7 @@ def main(args):
     cumulative_errors = 0
     target_time = math.ceil(time.time() + 1)
     BaseStat.set_time(target_time)
+    LOGGER.info("Initialised successfully")
     while True:
         try:
             if interrupt.kill_now or (cumulative_errors > error_limit > 0):
@@ -508,5 +509,6 @@ def create_sublogger(level, path=None):
 
 if __name__ == "__main__":
     LOGGER = logging.getLogger("system_stats")
+    LOGGER.setLevel(logging.INFO)
     LOGGER.disabled = True
     main(initial_argparse())
