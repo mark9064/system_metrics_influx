@@ -4,6 +4,7 @@ from system_stats_influx import BaseStat
 
 class CustomModule(BaseStat):
     """Dummy user module"""
+    name = "Custom" # human readable name for module
     def __init__(self):
         self.out_dict = {}
 

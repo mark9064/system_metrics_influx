@@ -46,7 +46,6 @@ next iteration
 TODO
 
 cython version
-better error handling
 """
 # pylint: disable=no-member, logging-format-interpolation
 import argparse
@@ -93,6 +92,7 @@ class BaseStat:
 
 class CPUStats(BaseStat):
     """All CPU related stats"""
+    name = "CPU"
     def __init__(self):
         self.cpu_time_fields = psutil.cpu_times_percent(interval=0.0)._fields
         self.cpu_stats_fields = psutil.cpu_stats()._fields
@@ -143,6 +143,7 @@ class CPUStats(BaseStat):
 
 class MemoryStats(BaseStat):
     """All memory related stats"""
+    name = "Memory"
     def __init__(self):
         self.out_dict = {"memory": {}}
 
@@ -157,6 +158,7 @@ class MemoryStats(BaseStat):
 
 class DiskStorageStats(BaseStat):
     """All stats related to storage space on disks"""
+    name = "Disk"
     def __init__(self, disk_paths):
         self.out_dict = {"disk": {}}
         self.disk_paths = disk_paths
@@ -173,6 +175,7 @@ class DiskStorageStats(BaseStat):
 
 class DiskIOStats(BaseStat):
     """All stats related to IO on disks"""
+    name = "DiskIO"
     def __init__(self):
         self.out_dict = {"diskio": {}}
         self.diskio_persistent = []
@@ -193,6 +196,7 @@ class DiskIOStats(BaseStat):
         self.last_end_time = time.time()
         stats_delta = [round((current_stats[i] - self.diskio_persistent[i]) / time_delta)
                        for i in range(len(current_stats))]
+        self.diskio_persistent = current_stats
         self.out_dict = {"diskio": {}}
         for item in ("read_bytes", "read_count", "write_bytes", "write_count"):
             self.out_dict["diskio"][self.remap[item]] = stats_delta[self.diskio_fields.index(item)]
@@ -200,6 +204,7 @@ class DiskIOStats(BaseStat):
 
 class NetIOStats(BaseStat):
     """All network related stats"""
+    name = "NetIO"
     def __init__(self):
         self.out_dict = {"netio": {}}
         self.netio_persistent = []
@@ -220,6 +225,7 @@ class NetIOStats(BaseStat):
         self.last_end_time = time.time()
         stats_delta = [round((current_stats[i] - self.netio_persistent[i]) / time_delta)
                        for i in range(len(current_stats))]
+        self.netio_persistent = current_stats
         self.out_dict = {"netio": {}}
         for item in ("bytes_sent", "bytes_recv", "packets_sent", "packets_recv"):
             self.out_dict["netio"][self.remap[item]] = stats_delta[self.netio_fields.index(item)]
@@ -227,6 +233,7 @@ class NetIOStats(BaseStat):
 
 class SensorStats(BaseStat):
     """All sensor related stats"""
+    name = "Sensors"
     def __init__(self):
         self.out_dict = {"sensors": {}}
         self.thermal_nosensor = False
@@ -253,6 +260,7 @@ class SensorStats(BaseStat):
 
 class MiscStats(BaseStat):
     """Any other miscellaneous stats"""
+    name = "Misc"
     def __init__(self):
         self.out_dict = {"misc": {}}
 
@@ -278,17 +286,22 @@ def main(args):
                    for x in ["host", "port", "username", "password", "database"]}
     if not args["dry_run"]:
         client = influxdb.InfluxDBClient(**influx_args)
-    stats_classes = [CPUStats(), MemoryStats(), DiskStorageStats(args["disk_paths"]),
-                     DiskIOStats(), NetIOStats(), SensorStats(), MiscStats()]
-    for module in stats_modules.USER_MODULES:
-        stats_classes.append(module())
-    BaseStat.save_rate = save_rate
-    continous_stats = []
-    for item in stats_classes:
-        if callable(getattr(item, "init_fetch", None)):
-            item.init_fetch()
-        if callable(getattr(item, "poll_stats", None)):
-            continous_stats.append(item)
+    try:
+        stats_classes = [CPUStats(), MemoryStats(), DiskStorageStats(args["disk_paths"]),
+                         DiskIOStats(), NetIOStats(), SensorStats(), MiscStats()]
+        for module in stats_modules.USER_MODULES:
+            stats_classes.append(module())
+        stats_classes = {x.name: x for x in stats_classes}
+        BaseStat.save_rate = save_rate
+        for item in stats_classes.values():
+            if callable(getattr(item, "init_fetch", None)):
+                item.init_fetch()
+            if callable(getattr(item, "poll_stats", None)):
+                item.continuous = True
+            else:
+                item.continuous = False
+    except Exception as exc:
+        raise Exception("Exception during initialisation: {0}".format(exc))
     cumulative_errors = 0
     target_time = math.ceil(time.time() + 1)
     BaseStat.set_time(target_time)
@@ -302,9 +315,16 @@ def main(args):
                 while time.time() < target_time - save_rate:
                     time.sleep(0.001)
             current_time = time.strftime("%Y-%m-%dT%H:%M:%S", time.localtime(target_time))
-            trio.run(collect_stats, continous_stats, stats_classes)
+            errors = trio.run(collect_stats, stats_classes)
+            if any(errors.values()):
+                cumulative_errors += 1
+                for key, value in errors.items():
+                    if value:
+                        LOGGER.warning("Error in stats collect for {0}: {1}".format(key, value))
+                if all(errors.values()):
+                    raise Exception("All stats failed")
             out_dict = {}
-            for item in stats_classes:
+            for item in stats_classes.values():
                 out_dict.update(item.out_dict)
             write_data = []
             for key, value in out_dict.items():
@@ -314,24 +334,50 @@ def main(args):
             else:
                 print(out_dict)
             cumulative_errors = 0
-        except Exception as caught_exception:
-            LOGGER.warning("Caught exception: {0}".format(caught_exception))
+        except Exception as exc:
+            if str(exc) == "All stats failed":
+                LOGGER.error("All stats failed")
+            else:
+                LOGGER.warning("Caught exception: {0}".format(exc))
             cumulative_errors += 1
-        target_time += save_rate
-        BaseStat.set_time(target_time)
+        finally:
+            target_time += save_rate
+            BaseStat.set_time(target_time)
     if pidfile is not None:
         os.remove(pidfile)
 
 
-async def collect_stats(continuous_stats, stats_classes):
+async def collect_stats(stats_classes):
     """Asynchronously fetches the stats"""
+    errors = {k: False for k in stats_classes}
+    for key, value in stats_classes.items():
+        value.error = False
     async with trio.open_nursery() as nursery:
-        for item in continuous_stats:
-            nursery.start_soon(item.poll_stats)
+        for key, value in stats_classes.items():
+            if value.continuous:
+                nursery.start_soon(catch_fetch_errors, value.poll_stats, value)
+    stats_classes, errors = stats_error_handler(stats_classes, errors)
     async with trio.open_nursery() as nursery:
-        for item in stats_classes:
-            nursery.start_soon(item.get_stats)
+        for key, value in stats_classes.items():
+            if not errors[key]:
+                nursery.start_soon(catch_fetch_errors, value.get_stats, value)
+    stats_classes, errors = stats_error_handler(stats_classes, errors)
+    return errors
 
+async def catch_fetch_errors(async_fn, value):
+    """Executes an async function and catches any raised errors"""
+    try:
+        await async_fn()
+    except Exception as exc:
+        value.error = exc
+
+def stats_error_handler(stats_classes, errors):
+    """Handles any errors raised during stats fetches"""
+    for key, value in stats_classes.items():
+        if value.error:
+            errors[key] = value.error
+        value.error = False
+    return stats_classes, errors
 
 def initial_argparse():
     """Parses command line args"""
@@ -448,6 +494,7 @@ def parse_config_file(args, cmd_args, specifed):
 
 def create_sublogger(level, path=None):
     """Sets up a sublogger"""
+    LOGGER.disabled = False
     formatter = logging.Formatter("%(asctime)s %(name)s %(levelname)s %(message)s")
     if path is None:
         logger_handler = logging.StreamHandler(sys.stdout)
@@ -459,5 +506,6 @@ def create_sublogger(level, path=None):
 
 
 if __name__ == "__main__":
-    LOGGER = logging.getLogger()
+    LOGGER = logging.getLogger("system_stats")
+    LOGGER.disabled = True
     main(initial_argparse())
