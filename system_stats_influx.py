@@ -446,7 +446,7 @@ def initial_argparse():
     if args["save_rate"] <= 0:
         raise ValueError("Save rate must be a non zero positive integer")
     if args["logfile_path"] is not None:
-        LOGGER.addHandler(create_sublogger(logging.DEBUG, args["log_path"]))
+        LOGGER.addHandler(create_sublogger(logging.DEBUG, args["logfile_path"]))
     if args["log_stdout"]:
         LOGGER.addHandler(create_sublogger(logging.DEBUG))
     if args["pidfile"] is not None:
