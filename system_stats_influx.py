@@ -125,6 +125,7 @@ class CPUStats(BaseStat):
         self.last_end_time = time.time()
         stats_delta = [round((current_stats[i] - self.cpu_persistent[i]) / time_delta)
                        for i in range(len(current_stats))]
+        self.cpu_persistent = current_stats
         utilisation = [round(statistics.mean(x), 2) for x in zip(*self.poll_data["util"])]
         frequency = round(statistics.mean(self.poll_data["freq"]))
         times = [round(statistics.mean(x), 2) for x in zip(*self.poll_data["times"])]
@@ -436,7 +437,7 @@ def initial_argparse():
     args = vars(parser.parse_args())
     specified = {}
     for key, value in args.items():
-        if value is None:
+        if value is None or (cmd_args[key]["type"] == bool and value == cmd_args[key]["default"]):
             args[key] = cmd_args[key]["default"]
             specified[key] = False
         else:
