@@ -46,6 +46,7 @@ next iteration
 TODO
 
 cython version
+grafana dashboard
 """
 # pylint: disable=no-member, logging-format-interpolation
 import argparse
@@ -58,10 +59,10 @@ import signal
 import statistics
 import sys
 import time
+import warnings
 
 import influxdb
 import psutil
-import trio
 import yaml
 
 import stats_modules
@@ -78,6 +79,7 @@ class GracefulKiller:
         """Sets the kill_now var upon SIGTERM/SIGINT"""
         # pylint: disable=unused-argument
         self.kill_now = True
+
 
 class BaseStat:
     """Base stats class for shared methods"""
@@ -139,7 +141,6 @@ class CPUStats(BaseStat):
             field = self.cpu_time_fields[index]
             if field in ("user", "system", "iowait", "nice", "irq", "softirq"):
                 self.out_dict["cpu"][field] = item
-
 
 
 class MemoryStats(BaseStat):
@@ -277,8 +278,30 @@ class MiscStats(BaseStat):
         self.out_dict["misc"]["uptime"] = uptime
 
 
+def critical_exit(exc, message=""):
+    """Exits with a critical error"""
+    LOGGER.critical(format_error(exc, message=message))
+    sys.exit(1)
+
+
+def format_error(exc_info, message=""):
+    """Returns a string of formatted exception info"""
+    if message:
+        message = "- {0} ".format(message)
+    if exc_info[1] is not None:
+        trace = ": {0}".format(exc_info[1])
+    else:
+        trace = ""
+    if exc_info[2] is not None:
+        line = "(L{0})".format(exc_info[2].tb_lineno)
+    else:
+        line = ""
+    return "{0} {1}{2}{3}".format(exc_info[0].__name__, message, line, trace)
+
 def main(args):
     """Main function"""
+    if CAUGHT_WARNINGS:
+        LOGGER.info("Suppressed sys.excepthook warning")
     save_rate = args["save_rate"]
     error_limit = args["error_limit"]
     pidfile = args["pidfile"]
@@ -301,8 +324,9 @@ def main(args):
                 item.continuous = True
             else:
                 item.continuous = False
-    except Exception as exc:
-        raise Exception("Exception during initialisation: {0}".format(exc))
+    except Exception:
+        exc = sys.exc_info()
+        critical_exit(exc, message="Initialisation failed")
     cumulative_errors = 0
     target_time = math.ceil(time.time() + 1)
     BaseStat.set_time(target_time)
@@ -312,7 +336,8 @@ def main(args):
             if interrupt.kill_now or (cumulative_errors > error_limit > 0):
                 break
             if time.time() > target_time - save_rate:
-                LOGGER.info("Running behind by {0}s".format(time.time() - target_time))
+                LOGGER.info("Running behind by {0:.2f}s"
+                            .format(time.time() - target_time + save_rate))
             else:
                 while time.time() < target_time - save_rate:
                     time.sleep(0.001)
@@ -322,12 +347,12 @@ def main(args):
                 cumulative_errors += 1
                 for key, value in errors.items():
                     if value:
-                        LOGGER.warning("Error in stats collect for {0}: {1}".format(key, value))
-                if all(errors.values()):
-                    raise Exception("All stats failed")
+                        LOGGER.error("Error in stats collect for {0}: {1}"
+                                     .format(key, format_error(value)))
             out_dict = {}
-            for item in stats_classes.values():
-                out_dict.update(item.out_dict)
+            for key, value in stats_classes.items():
+                if not errors[key]:
+                    out_dict.update(value.out_dict)
             write_data = []
             for key, value in out_dict.items():
                 write_data.append(dict(measurement=key, time=current_time, fields=value))
@@ -336,11 +361,9 @@ def main(args):
             else:
                 print(out_dict)
             cumulative_errors = 0
-        except Exception as exc:
-            if str(exc) == "All stats failed":
-                LOGGER.error("All stats failed")
-            else:
-                LOGGER.warning("Caught exception: {0}".format(exc))
+        except Exception:
+            exc = sys.exc_info()
+            LOGGER.warning("Caught exception: {0}".format(format_error(exc)))
             cumulative_errors += 1
         finally:
             target_time += save_rate
@@ -366,12 +389,14 @@ async def collect_stats(stats_classes):
     stats_classes, errors = stats_error_handler(stats_classes, errors)
     return errors
 
+
 async def catch_fetch_errors(async_fn, value):
     """Executes an async function and catches any raised errors"""
     try:
         await async_fn()
-    except Exception as exc:
-        value.error = exc
+    except Exception:
+        value.error = sys.exc_info()
+
 
 def stats_error_handler(stats_classes, errors):
     """Handles any errors raised during stats fetches"""
@@ -381,8 +406,11 @@ def stats_error_handler(stats_classes, errors):
         value.error = False
     return stats_classes, errors
 
+
 def initial_argparse():
     """Parses command line args"""
+    log_levels = dict(debug=logging.DEBUG, info=logging.INFO, warning=logging.WARNING,
+                      error=logging.ERROR, critical=logging.CRITICAL)
     cmd_args = collections.OrderedDict([
         ["config_file", dict(cmd_name="config-file", default=None, type=[None, str],
                              help="Specify path to config file. The command line options override "
@@ -417,7 +445,12 @@ def initial_argparse():
                               help="Sets the path to the desired logfile. By default a logfile "
                               "is not created.")],
         ["log_stdout", dict(cmd_name="log-stdout", default=False, type=bool, action="store_true",
-                            help="Enables logging to stdout")],
+                            help="Enables logging non critical events to stdout")],
+        ["log_level", dict(cmd_name="log-level", default="info", type=str,
+                           help="Set the loglevel for all logging. Default is info. "
+                           "Available levels are {0}".format(", ".join(log_levels.keys())))],
+        ["quiet", dict(cmd_name="quiet", default=False, type=bool, action="store_true",
+                       help="Disables logging critical exits to stdout; complete silence")],
         ["pidfile", dict(cmd_name="pidfile", default=None, type=[None, str],
                          help="Enables writing a pidfile to the specified location. "
                          "File is removed when the program exits. "
@@ -445,12 +478,24 @@ def initial_argparse():
             specified[key] = True
     if args["config_file"] is not None:
         args = parse_config_file(args, cmd_args, specified)
-    if args["save_rate"] <= 0:
-        raise ValueError("Save rate must be a non zero positive integer")
+    if args["log_level"] not in log_levels.keys():
+        critical_exit((TypeError, None, None), message="Invalid loglevel specified")
+    LOGGER.setLevel(log_levels[args["log_level"]])
+    if args["log_stdout"] and args["quiet"]:
+        critical_exit((TypeError, None, None),
+                      message="Log stdout and quiet cannot be specified together")
+    if args["quiet"]:
+        LOGGER.handlers = []
+    if args["log_stdout"]:
+        # isinstance(LOGGER.handlers[0], logging.StreamHandler)
+        LOGGER.handlers[0].level = logging.DEBUG
     if args["logfile_path"] is not None:
         LOGGER.addHandler(create_sublogger(logging.DEBUG, args["logfile_path"]))
-    if args["log_stdout"]:
-        LOGGER.addHandler(create_sublogger(logging.DEBUG))
+    if LOGGER.handlers == []:
+        LOGGER.disabled = True
+    if args["save_rate"] <= 0:
+        critical_exit((TypeError, None, None),
+                      message="Save rate must be a non zero positive integer")
     if args["pidfile"] is not None:
         open(args["pidfile"], "w").write(str(os.getpid()))
     mountpoints = [x.mountpoint for x in psutil.disk_partitions()]
@@ -458,8 +503,9 @@ def initial_argparse():
         if item.endswith("/") and item != "/":
             item = item[:-1]
         if item not in mountpoints:
-            raise FileNotFoundError("Invalid mountpoint specified")
+            critical_exit((FileNotFoundError, None, None), message="Invalid mountpoint specified")
     return args
+
 
 def parse_config_file(args, cmd_args, specifed):
     """Parses the config file and type checks it"""
@@ -486,17 +532,18 @@ def parse_config_file(args, cmd_args, specifed):
                 else:
                     for item in value:
                         if not isinstance(item, allowed_type):
-                            error = "{0} inside list".format(allowed_type.__name__)
+                            error = "{0} inside a list".format(allowed_type.__name__)
         if error:
-            raise TypeError("Option {0} in config file is not type {1}"
-                            .format(cmd_args[key]["cmd_name"], error))
+            critical_exit((TypeError, None, None),
+                          message="TypeError: Option {0} in config file is not type {1}"
+                          .format(cmd_args[key]["cmd_name"], error))
         if not specifed[key]:
             args[key] = value
     return args
 
+
 def create_sublogger(level, path=None):
     """Sets up a sublogger"""
-    LOGGER.disabled = False
     formatter = logging.Formatter("%(asctime)s %(name)s %(levelname)s %(message)s")
     if path is None:
         logger_handler = logging.StreamHandler(sys.stdout)
@@ -507,8 +554,24 @@ def create_sublogger(level, path=None):
     return logger_handler
 
 
+def handle_warnings(trio_warnings):
+    """Handles the sys.excepthook warning trio raises on ubuntu"""
+    if not trio_warnings:
+        return None
+    if len(trio_warnings) == 1:
+        if "sys.excepthook" in trio_warnings[0].message.args[0]:
+            return True
+    for item in trio_warnings:
+        print(item)
+    return False
+
+
 if __name__ == "__main__":
+    with warnings.catch_warnings(record=True) as CAUGHT_WARNINGS:
+        warnings.simplefilter("always")
+        import trio
+        CAUGHT_WARNINGS = handle_warnings(CAUGHT_WARNINGS)
     LOGGER = logging.getLogger("system_stats")
     LOGGER.setLevel(logging.INFO)
-    LOGGER.disabled = True
+    LOGGER.addHandler(create_sublogger(logging.CRITICAL))
     main(initial_argparse())
