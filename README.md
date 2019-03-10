@@ -4,7 +4,7 @@ Saves various system stats to an influxdb database, which can be used with plott
 
 Python3 is required.
 
-Run system_stats_influx.py with -h to see all the command line options. There is also an example config file.
+Run influxdb_stats.py with -h to see all the command line options. There is also an example config file.
 
 Documentation is inside the python files in the docstrings.
 
