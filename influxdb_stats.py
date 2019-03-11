@@ -571,7 +571,7 @@ if __name__ == "__main__":
         warnings.simplefilter("always")
         import trio
         CAUGHT_WARNINGS = handle_warnings(CAUGHT_WARNINGS)
-    LOGGER = logging.getLogger("system_stats")
+    LOGGER = logging.getLogger("influxdb_stats")
     LOGGER.setLevel(logging.INFO)
     LOGGER.addHandler(create_sublogger(logging.CRITICAL))
     main(initial_argparse())
