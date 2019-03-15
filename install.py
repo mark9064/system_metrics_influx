@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 """Installs influx, grafana, dependencies and configures them"""
 import os
 import subprocess
@@ -36,7 +37,7 @@ def main():
                                     repo_link="https://packages.grafana.com/oss/deb",
                                     override_codename="stable",
                                     repo_channel="main",
-                                    key_link="https://packagecloud.io/gpg.key")
+                                    key_link="https://packages.grafana.com/gpg.key")
             print("Grafana install done")
     if answer_convert(input("Install python dependencies? (y/n): ")):
         print("Installing python modules")
