@@ -2,6 +2,8 @@
 """Installs influx, grafana, dependencies and configures them"""
 import os
 import subprocess
+import time
+
 
 def find_codename():
     """Finds the ubuntu codename"""
@@ -15,7 +17,9 @@ def find_codename():
     info.close()
     return codename
 
+
 CODENAME = find_codename()
+
 
 def main():
     """Main function"""
@@ -109,6 +113,7 @@ def setup_influxdb():
     except ImportError:
         print("Influxdb module not found, please install dependencies")
         return
+    time.sleep(2)
     client = influxdb.InfluxDBClient()
     print("Creating database")
     client.create_database("system_stats")
@@ -118,12 +123,14 @@ def setup_influxdb():
     client.create_retention_policy("stats_retention", retention_time, 1,
                                    database="system_stats", default=True)
 
+
 def apt_install(package):
     """Installs a package using apt"""
     print("Updating apt index")
     subprocess.run("sudo apt update", shell=True)
     print("Installing {0}".format(package))
     subprocess.run("sudo apt install {0}".format(package), shell=True)
+
 
 def apt_search(apt, package, install_type):
     """Checks if a package is installed using apt"""
@@ -136,11 +143,13 @@ def apt_search(apt, package, install_type):
                 return False
     return True
 
+
 def answer_convert(ans):
     """Converts a y/n to true/false"""
     if ans.lower() == "y":
         return True
     return False
+
 
 if __name__ == "__main__":
     main()
