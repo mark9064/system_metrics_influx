@@ -479,6 +479,7 @@ def initial_argparse():
         else:
             specified[key] = True
     if args["config_file"] is not None:
+        args["config_file"] = os.path.expanduser(args["config_file"])
         args = parse_config_file(args, cmd_args, specified)
     if args["log_level"] not in log_levels.keys():
         critical_exit((TypeError, None, None), message="Invalid loglevel specified")
@@ -492,6 +493,7 @@ def initial_argparse():
         # isinstance(LOGGER.handlers[0], logging.StreamHandler)
         LOGGER.handlers[0].level = logging.DEBUG
     if args["logfile_path"] is not None:
+        args["logfile_path"] = os.path.expanduser(args["logfile_path"])
         LOGGER.addHandler(create_sublogger(logging.DEBUG, args["logfile_path"]))
     if LOGGER.handlers == []:
         LOGGER.disabled = True
@@ -499,6 +501,7 @@ def initial_argparse():
         critical_exit((TypeError, None, None),
                       message="Save rate must be a non zero positive integer")
     if args["pidfile"] is not None:
+        args["pidfile"] = os.path.expanduser(args["pidfile"])
         open(args["pidfile"], "w").write(str(os.getpid()))
     mountpoints = [x.mountpoint for x in psutil.disk_partitions()]
     for item in args["disk_paths"]:
