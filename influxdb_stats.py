@@ -559,14 +559,14 @@ def create_sublogger(level, path=None):
     return logger_handler
 
 
-def handle_warnings(trio_warnings):
+def handle_warnings():
     """Handles the sys.excepthook warning trio raises on ubuntu"""
-    if not trio_warnings:
+    if not CAUGHT_WARNINGS:
         return None
-    if len(trio_warnings) == 1:
-        if "sys.excepthook" in trio_warnings[0].message.args[0]:
+    if len(CAUGHT_WARNINGS) == 1:
+        if "sys.excepthook" in CAUGHT_WARNINGS[0].message.args[0]:
             return True
-    for item in trio_warnings:
+    for item in CAUGHT_WARNINGS:
         print(item)
     return False
 
@@ -575,7 +575,7 @@ if __name__ == "__main__":
     with warnings.catch_warnings(record=True) as CAUGHT_WARNINGS:
         warnings.simplefilter("always")
         import trio
-        CAUGHT_WARNINGS = handle_warnings(CAUGHT_WARNINGS)
+        CAUGHT_WARNINGS = handle_warnings()
     LOGGER = logging.getLogger("influxdb_stats")
     LOGGER.setLevel(logging.INFO)
     LOGGER.addHandler(create_sublogger(logging.CRITICAL))
