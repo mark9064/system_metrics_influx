@@ -113,7 +113,7 @@ class CPUStats(BaseStat):
         self.poll_data = dict(util=[], freq=[], times=[])
         while time.time() < self.target_time - 0.2:
             self.poll_data["util"].append(psutil.cpu_percent(percpu=True))
-            self.poll_data["freq"].append(int(psutil.cpu_freq().current))
+            self.poll_data["freq"].append(psutil.cpu_freq(percpu=True))
             self.poll_data["times"].append(psutil.cpu_times_percent(interval=0.0))
             next_poll_time = time.time() + self.save_rate / 10
             if next_poll_time > self.target_time:
@@ -129,14 +129,16 @@ class CPUStats(BaseStat):
                        for i in range(len(current_stats))]
         self.cpu_persistent = current_stats
         utilisation = [round(statistics.mean(x), 2) for x in zip(*self.poll_data["util"])]
-        frequency = round(statistics.mean(self.poll_data["freq"]))
+        frequency = [round(statistics.mean([y.current for y in x]), 2)
+                     for x in zip(*self.poll_data["freq"])]
         times = [round(statistics.mean(x), 2) for x in zip(*self.poll_data["times"])]
         self.out_dict = {"cpu": {}}
         for item in ["ctx_switches", "interrupts"]:
             self.out_dict["cpu"][item] = stats_delta[self.cpu_stats_fields.index(item)]
         for index, item in enumerate(utilisation):
             self.out_dict["cpu"]["cpu{0}".format(index)] = item
-        self.out_dict["cpu"]["frequency"] = frequency
+        for index, item in enumerate(frequency):
+            self.out_dict["cpu"]["cpu{0}_freq".format(index)] = item
         for index, item in enumerate(times):
             field = self.cpu_time_fields[index]
             if field in ("user", "system", "iowait", "nice", "irq", "softirq"):
