@@ -129,7 +129,7 @@ class CPUStats(BaseStat):
                        for i in range(len(current_stats))]
         self.cpu_persistent = current_stats
         utilisation = [round(statistics.mean(x), 2) for x in zip(*self.poll_data["util"])]
-        frequency = [round(statistics.mean([y.current for y in x]), 2)
+        frequency = [round(statistics.mean([y.current * 1000000 for y in x]), 2)
                      for x in zip(*self.poll_data["freq"])]
         times = [round(statistics.mean(x), 2) for x in zip(*self.poll_data["times"])]
         self.out_dict = {"cpu": {}}
