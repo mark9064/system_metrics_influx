@@ -4,7 +4,7 @@ Data:
 
 CPU by core psutil.cpu_percent(percpu=True)
 CPU by user, system, user, idle, nice, iowait, irq, softirq psutil.cpu_times_percent()
-CPU frequency psutil.cpu_freq()
+CPU frequency psutil.cpu_freq(percpu=True)
 Memory by absolute usage and percentage psutil.virtual_memory() expressed in bytes
 Disk usage per specified mountpoint; total, used, percent psutil.disk_usage()
 Disk i/o in bytes and number of reads/writes psutil.disk_io_counters()
