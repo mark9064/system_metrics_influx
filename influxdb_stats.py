@@ -537,7 +537,7 @@ def parse_config_file(args, cmd_args, specifed):
                 else:
                     for item in value:
                         if not isinstance(item, allowed_type):
-                            error = "{0} inside a list".format(allowed_type.__name__)
+                            error = "{0}s inside a list".format(allowed_type.__name__)
         if error:
             critical_exit((TypeError, None, None),
                           message="TypeError: Option {0} in config file is not type {1}"
