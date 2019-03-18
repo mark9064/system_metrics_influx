@@ -359,7 +359,7 @@ def main(args):
             for key, value in out_dict.items():
                 write_data.append(dict(measurement=key, time=current_time, fields=value))
             if not args["dry_run"]:
-                client.write_points(write_data)
+                client.write_points(write_data, database="system_stats")
             else:
                 print(out_dict)
             cumulative_errors = 0
