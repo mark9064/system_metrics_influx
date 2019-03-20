@@ -338,8 +338,11 @@ def main(args):
             if interrupt.kill_now or (cumulative_errors > error_limit > 0):
                 break
             if time.time() > target_time - save_rate:
-                LOGGER.info("Running behind by {0:.2f}s"
-                            .format(time.time() - target_time + save_rate))
+                behind_secs = time.time() - target_time + save_rate
+                level = logging.INFO
+                if behind_secs >= save_rate / 2:
+                    level = logging.WARNING
+                LOGGER.log(level, "Running behind by {0:.2f}s".format(behind_secs))
             else:
                 while time.time() < target_time - save_rate:
                     time.sleep(0.001)
