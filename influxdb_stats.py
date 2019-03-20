@@ -374,7 +374,7 @@ def main(args):
             target_time += save_rate
             BaseStat.set_time(target_time)
     if pidfile is not None:
-        LOGGER.debug("Removed pidfile")
+        LOGGER.debug("Removing pidfile")
         os.remove(pidfile)
     LOGGER.info("Exiting")
 
