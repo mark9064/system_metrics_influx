@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Data logger to influxdb
+"""
 Data:
 
 CPU by core psutil.cpu_percent(percpu=True)
@@ -46,7 +46,9 @@ next iteration
 TODO
 
 cython version
-grafana dashboard
+module rename? - only main py left
+finish readme/decide docs location
+gpu support
 """
 # pylint: disable=no-member, logging-format-interpolation
 import argparse
@@ -581,7 +583,7 @@ if __name__ == "__main__":
         warnings.simplefilter("always")
         import trio
         CAUGHT_WARNINGS = handle_warnings()
-    LOGGER = logging.getLogger("influxdb_stats")
+    LOGGER = logging.getLogger("system_metrics_influx")
     LOGGER.setLevel(logging.INFO)
     LOGGER.addHandler(create_sublogger(logging.CRITICAL))
     main(initial_argparse())
