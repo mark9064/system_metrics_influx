@@ -1,0 +1,5 @@
+# example config for debugging
+max-consecutive-errors: 5
+dry-run: true
+log-stdout: true
+log-level: debug

@@ -1,0 +1,7 @@
+# example production config
+quiet: true
+log-level: info # or warning
+pidfile: some/file
+logfile-path: some/other/file
+username: root
+password: mypass
