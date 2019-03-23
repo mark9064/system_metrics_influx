@@ -46,8 +46,6 @@ next iteration
 TODO
 
 cython version
-module rename? - only main py left
-finish readme/decide docs location
 gpu support
 """
 # pylint: disable=no-member, logging-format-interpolation
