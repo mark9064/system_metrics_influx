@@ -343,9 +343,11 @@ def main(args):
                 if behind_secs >= save_rate / 2:
                     level = logging.WARNING
                 LOGGER.log(level, "Running behind by {0:.2f}s".format(behind_secs))
-            else:
-                while time.time() < target_time - save_rate:
-                    time.sleep(0.001)
+                if behind_secs > 300:
+                    LOGGER.critical("Running behind by more than 5 mins, skipping data entry")
+                    BaseStat.set_time(math.ceil(time.time() + 1))
+            while time.time() < target_time - save_rate:
+                time.sleep(0.001)
             current_time = time.strftime("%Y-%m-%dT%H:%M:%S", time.localtime(target_time))
             errors = trio.run(collect_stats, stats_classes)
             if any(errors.values()):
