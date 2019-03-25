@@ -554,7 +554,7 @@ def parse_config_file(args, cmd_args, specifed):
 
 def create_sublogger(level, path=None):
     """Sets up a sublogger"""
-    formatter = logging.Formatter("%(asctime)s %(name)s %(levelname)s %(message)s")
+    formatter = logging.Formatter("%(asctime)s %(name)s %(process)d %(levelname)s %(message)s")
     if path is None:
         logger_handler = logging.StreamHandler(sys.stdout)
     else:
