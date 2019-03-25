@@ -28,6 +28,7 @@ CODENAME = find_codename()
 
 def main():
     """Main function"""
+    os.mkdir("configured")
     if (hasattr(sys, "real_prefix") or
             (hasattr(sys, "base_prefix") and sys.base_prefix != sys.prefix)):
         print("Virtualenv detected, not using sudo for pip installs")
@@ -162,7 +163,7 @@ def setup_influxdb():
 def setup_grafana():
     """Installs grafana plugins and generates a source file"""
     template_name = "data/grafana_template.json"
-    out_name = "data/grafana_configured.json"
+    out_name = "configured/grafana_configured.json"
     print("Installing plugins")
     subprocess.run("sudo grafana-cli plugins install grafana-clock-panel", shell=True)
     print("Restarting grafana")
@@ -185,7 +186,7 @@ def setup_grafana():
 def systemd_install():
     """Installs the app as a systemd service"""
     template_name = "data/systemd_template.txt"
-    out_name = "data/system_metrics_influx.service"
+    out_name = "configured/system_metrics_influx.service"
     write_path = "/etc/systemd/system/"
     path = input("Input path to config file (absolute path): ")
     try:

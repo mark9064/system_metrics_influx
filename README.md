@@ -18,7 +18,7 @@ Install can be done by manually installing the dependencies or using the install
 
 Python dependencies are in requirements.txt. Using a python venv/virtualenv is supported by the installer (including the systemd service) and the main script.
 
-If grafana is being used to graph the data, it is recommended to set the datasource minimum interval equal to the save rate to avoid any gaps in the graph. A grafana dashboard is in data/grafana_template.json and the generated dashboard from the installer is written to data/grafana_configured.json (it is recommended to run the installer first to set it up for your number of cpus; currently grafana doesn't provide a flexible way to template everything [e.g](https://github.com/grafana/grafana/issues/3935))
+If grafana is being used to graph the data, it is recommended to set the datasource minimum interval equal to the save rate to avoid any gaps in the graph. A grafana dashboard is in data/grafana_template.json and the generated dashboard from the installer is written to configured/grafana_configured.json (it is recommended to run the installer first to set it up for your number of cpus; currently grafana doesn't provide a flexible way to template everything [e.g](https://github.com/grafana/grafana/issues/3935))
 
 ## Developement / Adding custom modules
 
