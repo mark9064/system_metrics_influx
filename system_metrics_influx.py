@@ -345,7 +345,8 @@ def main(args):
                 LOGGER.log(level, "Running behind by {0:.2f}s".format(behind_secs))
                 if behind_secs > 300:
                     LOGGER.critical("Running behind by more than 5 mins, skipping data entry")
-                    BaseStat.set_time(math.ceil(time.time() + 1))
+                    target_time = math.ceil(time.time() + 1)
+                    BaseStat.set_time(target_time)
             while time.time() < target_time - save_rate:
                 time.sleep(0.001)
             current_time = time.strftime("%Y-%m-%dT%H:%M:%S", time.localtime(target_time))
