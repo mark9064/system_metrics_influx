@@ -349,7 +349,7 @@ def main(args):
                     BaseStat.set_time(target_time)
             while time.time() < target_time - save_rate:
                 time.sleep(0.001)
-            current_time = time.strftime("%Y-%m-%dT%H:%M:%S", time.localtime(target_time))
+            current_time = time.strftime("%Y-%m-%dT%H:%M:%S", time.gmtime(target_time))
             errors = trio.run(collect_stats, stats_classes)
             if any(errors.values()):
                 cumulative_errors += 1
@@ -584,6 +584,7 @@ if __name__ == "__main__":
         warnings.simplefilter("always")
         import trio
         CAUGHT_WARNINGS = handle_warnings()
+    logging.Formatter.converter = time.gmtime
     LOGGER = logging.getLogger("system_metrics_influx")
     LOGGER.setLevel(logging.INFO)
     LOGGER.addHandler(create_sublogger(logging.CRITICAL))
