@@ -7,8 +7,6 @@ import subprocess
 import sys
 import time
 
-import yaml
-
 
 def find_codename():
     """Finds the ubuntu codename"""
@@ -185,6 +183,11 @@ def setup_grafana():
 
 def systemd_install():
     """Installs the app as a systemd service"""
+    try:
+        import yaml
+    except ImportError:
+        print("YAML module not found, please install dependencies")
+        return False
     template_name = "data/systemd_template.txt"
     out_name = "configured/system_metrics_influx.service"
     write_path = "/etc/systemd/system/"
