@@ -24,7 +24,7 @@ class CustomModule(BaseStat):
     """Dummy user module"""
     name = "Custom" # human readable name for module
     def __init__(self):
-        self.out_data = {} # this would require a measurement key to push anything to influx
+        self.out_data = {"measurement": None} # disables pushing the stat to influx
 
     async def get_stats(self):
         """Dummy get stats function"""
