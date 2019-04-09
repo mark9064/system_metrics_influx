@@ -48,7 +48,7 @@ TODO
 cython version
 gpu support
 """
-# pylint: disable=no-member, logging-format-interpolation
+# pylint: disable=logging-format-interpolation
 import argparse
 import collections
 import copy
