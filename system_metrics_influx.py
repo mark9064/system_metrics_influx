@@ -378,7 +378,7 @@ def main(args):
             cumulative_errors = 0
         except Exception:
             exc = sys.exc_info()
-            LOGGER.warning("Caught exception: {0}".format(format_error(exc)))
+            LOGGER.error("Caught exception: {0}".format(format_error(exc)))
             cumulative_errors += 1
         finally:
             target_time += save_rate
