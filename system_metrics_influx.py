@@ -100,7 +100,7 @@ class CPUStats(BaseStat):
         self.cpu_stats_fields = psutil.cpu_stats()._fields
         self.poll_data = dict(util=[], freq=[], times=[])
         self.cpu_persistent = []
-        self.out_dict = {"cpu": {}}
+        self.out_data = {"cpu": {}}
         self.last_end_time = 0
 
     def init_fetch(self):
@@ -121,7 +121,7 @@ class CPUStats(BaseStat):
             time.sleep(next_poll_time - time.time())
 
     async def get_stats(self):
-        """Fetches the point stats and pushes to out_dict"""
+        """Fetches the point stats and pushes to out_data"""
         current_stats = psutil.cpu_stats()
         time_delta = time.time() - self.last_end_time
         self.last_end_time = time.time()
@@ -132,56 +132,56 @@ class CPUStats(BaseStat):
         frequency = [round(statistics.mean([y.current * 1000000 for y in x]), 2)
                      for x in zip(*self.poll_data["freq"])]
         times = [round(statistics.mean(x), 2) for x in zip(*self.poll_data["times"])]
-        self.out_dict = {"cpu": {}}
+        self.out_data = {"cpu": {}}
         for item in ["ctx_switches", "interrupts"]:
-            self.out_dict["cpu"][item] = stats_delta[self.cpu_stats_fields.index(item)]
+            self.out_data["cpu"][item] = stats_delta[self.cpu_stats_fields.index(item)]
         for index, item in enumerate(utilisation):
-            self.out_dict["cpu"]["cpu{0}".format(index)] = item
+            self.out_data["cpu"]["cpu{0}".format(index)] = item
         for index, item in enumerate(frequency):
-            self.out_dict["cpu"]["cpu{0}_freq".format(index)] = item
+            self.out_data["cpu"]["cpu{0}_freq".format(index)] = item
         for index, item in enumerate(times):
             field = self.cpu_time_fields[index]
             if field in ("user", "system", "iowait", "nice", "irq", "softirq"):
-                self.out_dict["cpu"][field] = item
+                self.out_data["cpu"][field] = item
 
 
 class MemoryStats(BaseStat):
     """All memory related stats"""
     name = "Memory"
     def __init__(self):
-        self.out_dict = {"memory": {}}
+        self.out_data = {"memory": {}}
 
     async def get_stats(self):
-        """Fetches the point stats and pushes to out_dict"""
+        """Fetches the point stats and pushes to out_data"""
         mem_data = psutil.virtual_memory()
-        self.out_dict = {"memory": {}}
-        self.out_dict["memory"]["total"] = mem_data.total
-        self.out_dict["memory"]["used"] = mem_data.total - mem_data.available
-        self.out_dict["memory"]["percent"] = mem_data.percent
+        self.out_data = {"memory": {}}
+        self.out_data["memory"]["total"] = mem_data.total
+        self.out_data["memory"]["used"] = mem_data.total - mem_data.available
+        self.out_data["memory"]["percent"] = mem_data.percent
 
 
 class DiskStorageStats(BaseStat):
     """All stats related to storage space on disks"""
     name = "Disk"
     def __init__(self, disk_paths):
-        self.out_dict = {"disk": {}}
+        self.out_data = {"disk": {}}
         self.disk_paths = disk_paths
 
     async def get_stats(self):
-        """Fetches the point stats and pushes to out_dict"""
-        self.out_dict = {"disk": {}}
+        """Fetches the point stats and pushes to out_data"""
+        self.out_data = {"disk": {}}
         for item in self.disk_paths:
             disk_data = psutil.disk_usage(item)
-            self.out_dict["disk"]["{0}_total".format(item)] = disk_data.total
-            self.out_dict["disk"]["{0}_used".format(item)] = disk_data.used
-            self.out_dict["disk"]["{0}_percent".format(item)] = disk_data.percent
+            self.out_data["disk"]["{0}_total".format(item)] = disk_data.total
+            self.out_data["disk"]["{0}_used".format(item)] = disk_data.used
+            self.out_data["disk"]["{0}_percent".format(item)] = disk_data.percent
 
 
 class DiskIOStats(BaseStat):
     """All stats related to IO on disks"""
     name = "DiskIO"
     def __init__(self):
-        self.out_dict = {"diskio": {}}
+        self.out_data = {"diskio": {}}
         self.diskio_persistent = []
         self.last_end_time = 0
         self.diskio_fields = psutil.disk_io_counters()._fields
@@ -194,23 +194,23 @@ class DiskIOStats(BaseStat):
         self.last_end_time = time.time()
 
     async def get_stats(self):
-        """Fetches the point stats and pushes to out_dict"""
+        """Fetches the point stats and pushes to out_data"""
         current_stats = psutil.disk_io_counters()
         time_delta = time.time() - self.last_end_time
         self.last_end_time = time.time()
         stats_delta = [round((current_stats[i] - self.diskio_persistent[i]) / time_delta)
                        for i in range(len(current_stats))]
         self.diskio_persistent = current_stats
-        self.out_dict = {"diskio": {}}
+        self.out_data = {"diskio": {}}
         for item in ("read_bytes", "read_count", "write_bytes", "write_count"):
-            self.out_dict["diskio"][self.remap[item]] = stats_delta[self.diskio_fields.index(item)]
+            self.out_data["diskio"][self.remap[item]] = stats_delta[self.diskio_fields.index(item)]
 
 
 class NetIOStats(BaseStat):
     """All network related stats"""
     name = "NetIO"
     def __init__(self):
-        self.out_dict = {"netio": {}}
+        self.out_data = {"netio": {}}
         self.netio_persistent = []
         self.last_end_time = 0
         self.netio_fields = psutil.net_io_counters()._fields
@@ -223,27 +223,27 @@ class NetIOStats(BaseStat):
         self.last_end_time = time.time()
 
     async def get_stats(self):
-        """Fetches the point stats and pushes to out_dict"""
+        """Fetches the point stats and pushes to out_data"""
         current_stats = psutil.net_io_counters()
         time_delta = time.time() - self.last_end_time
         self.last_end_time = time.time()
         stats_delta = [round((current_stats[i] - self.netio_persistent[i]) / time_delta)
                        for i in range(len(current_stats))]
         self.netio_persistent = current_stats
-        self.out_dict = {"netio": {}}
+        self.out_data = {"netio": {}}
         for item in ("bytes_sent", "bytes_recv", "packets_sent", "packets_recv"):
-            self.out_dict["netio"][self.remap[item]] = stats_delta[self.netio_fields.index(item)]
+            self.out_data["netio"][self.remap[item]] = stats_delta[self.netio_fields.index(item)]
 
 
 class SensorStats(BaseStat):
     """All sensor related stats"""
     name = "Sensors"
     def __init__(self):
-        self.out_dict = {"sensors": {}}
+        self.out_data = {"sensors": {}}
         self.thermal_nosensor = False
 
     async def get_stats(self):
-        """Fetches the point stats and pushes to out_dict"""
+        """Fetches the point stats and pushes to out_data"""
         temperature_data = psutil.sensors_temperatures()
         cpu_temperature = None
         if "coretemp" in temperature_data:
@@ -253,9 +253,9 @@ class SensorStats(BaseStat):
                     break
         elif "armada_thermal" in temperature_data:
             cpu_temperature = temperature_data["armada_thermal"][0].current
-        self.out_dict = {"sensors": {}}
+        self.out_data = {"sensors": {}}
         if cpu_temperature is not None:
-            self.out_dict["sensors"]["cpu_temp"] = cpu_temperature
+            self.out_data["sensors"]["cpu_temp"] = cpu_temperature
         else:
             if not self.thermal_nosensor:
                 LOGGER.info("CPU thermal sensor not found")
@@ -266,18 +266,18 @@ class MiscStats(BaseStat):
     """Any other miscellaneous stats"""
     name = "Misc"
     def __init__(self):
-        self.out_dict = {"misc": {}}
+        self.out_data = {"misc": {}}
 
     async def get_stats(self):
-        """Fetches the point stats and pushes to out_dict"""
+        """Fetches the point stats and pushes to out_data"""
         sys_load = os.getloadavg()
         processes = len(psutil.pids())
         uptime = self.target_time - int(psutil.boot_time())
-        self.out_dict = {"misc": {}}
+        self.out_data = {"misc": {}}
         for index, item in enumerate(("load_1", "load_5", "load_15")):
-            self.out_dict["misc"][item] = sys_load[index]
-        self.out_dict["misc"]["processes"] = processes
-        self.out_dict["misc"]["uptime"] = uptime
+            self.out_data["misc"][item] = sys_load[index]
+        self.out_data["misc"]["processes"] = processes
+        self.out_data["misc"]["uptime"] = uptime
 
 
 def critical_exit(exc, message=""):
@@ -357,17 +357,23 @@ def main(args):
                     if value:
                         LOGGER.error("Error in stats collect for {0}: {1}"
                                      .format(key, format_error(value)))
-            out_dict = {}
+            out_data = {}
             for key, value in stats_classes.items():
                 if not errors[key]:
-                    out_dict.update(value.out_dict)
+                    out_data.update(value.out_data)
             write_data = []
-            for key, value in out_dict.items():
-                write_data.append(dict(measurement=key, time=current_time, fields=value))
+            for key, value in out_data.items():
+                if isinstance(value, list):
+                    for dataset in value:
+                        tags = dataset.pop("tags")
+                        write_data.append(dict(measurement=key, time=current_time,
+                                               fields=dataset, tags=tags))
+                elif isinstance(value, dict):
+                    write_data.append(dict(measurement=key, time=current_time, fields=value))
             if not args["dry_run"]:
                 client.write_points(write_data, database=influx_args["database"])
             else:
-                print(out_dict)
+                print(out_data)
             cumulative_errors = 0
         except Exception:
             exc = sys.exc_info()
