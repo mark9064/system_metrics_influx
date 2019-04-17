@@ -66,7 +66,7 @@ import influxdb
 import psutil
 import yaml
 
-import stats_modules
+from common_lib import BaseStat, InternalConfig
 
 
 class GracefulKiller:
