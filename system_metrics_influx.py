@@ -5,6 +5,7 @@ Data:
 CPU by core psutil.cpu_percent(percpu=True)
 CPU by user, system, user, idle, nice, iowait, irq, softirq psutil.cpu_times_percent()
 CPU frequency psutil.cpu_freq(percpu=True)
+Nvidia GPUs by clocks, temperature, fanspeed, power, utilisations and memory usage
 Memory by absolute usage and percentage psutil.virtual_memory() expressed in bytes
 Disk usage per specified mountpoint; total, used, percent psutil.disk_usage()
 Disk i/o in bytes and number of reads/writes psutil.disk_io_counters()
@@ -16,6 +17,7 @@ System uptime psutil.boot_time()
 
 Catergories:
     cpu
+    nvidia
     memory
     disk
     diskio
@@ -148,6 +150,121 @@ class CPUStats(BaseStat):
             field = self.cpu_time_fields[index]
             if field in ("user", "system", "iowait", "nice", "irq", "softirq"):
                 self.out_data[field] = item
+
+
+class GPUStats(BaseStat):
+    """All GPU related stats"""
+    name = "GPU"
+    def __init__(self):
+        self.out_data = []
+        self.nvidia_devices = {}
+        try:
+            import py3nvml.py3nvml as py3nvml
+            self.py3nvml = py3nvml
+            self.setup_nvidia()
+        except ImportError:
+            LOGGER.info("Py3nvml not found, disabling nvidia backend")
+
+    def setup_nvidia(self):
+        """Sets up nvidia backend"""
+        self.py3nvml.nvmlInit()
+        LOGGER.debug("Detected nvidia driver: {0}"
+                     .format(self.py3nvml.nvmlSystemGetDriverVersion()))
+        device_count = self.py3nvml.nvmlDeviceGetCount()
+        if device_count == 0:
+            LOGGER.warning("Nvidia driver loaded but no devices found")
+        for item in range(device_count):
+            handle = self.py3nvml.nvmlDeviceGetHandleByIndex(item)
+            uuid = str(self.py3nvml.nvmlDeviceGetUUID(handle))
+            if uuid not in CONFIG.main["nvidia_cards"]:
+                LOGGER.warning("New nvidia card detected, please re-run install to set up"
+                               " the card and grafana")
+            else:
+                self.nvidia_devices[uuid] = handle
+        self.nvidia_metrics = dict(
+            mem=[self.py3nvml.nvmlDeviceGetMemoryInfo],
+            power_usage=[self.py3nvml.nvmlDeviceGetPowerUsage],
+            power_limit=[self.py3nvml.nvmlDeviceGetPowerManagementLimit],
+            util=[self.py3nvml.nvmlDeviceGetUtilizationRates],
+            temp=[self.py3nvml.nvmlDeviceGetTemperature, self.py3nvml.NVML_TEMPERATURE_GPU],
+            core_clock=[self.py3nvml.nvmlDeviceGetClockInfo, self.py3nvml.NVML_CLOCK_GRAPHICS],
+            max_core_clock=[self.py3nvml.nvmlDeviceGetMaxClockInfo,
+                            self.py3nvml.NVML_CLOCK_GRAPHICS],
+            mem_clock=[self.py3nvml.nvmlDeviceGetClockInfo, self.py3nvml.NVML_CLOCK_MEM],
+            max_mem_clock=[self.py3nvml.nvmlDeviceGetMaxClockInfo, self.py3nvml.NVML_CLOCK_MEM],
+            fanspeed_percent=[self.py3nvml.nvmlDeviceGetFanSpeed],
+        )
+        self.device_support = {}
+        for uuid, handle in self.nvidia_devices.items():
+            self.device_support[uuid] = {}
+            for test, args in self.nvidia_metrics.items():
+                if self.test_metric(args[0], handle, *args[1:]):
+                    self.device_support[uuid][test] = True
+                else:
+                    self.device_support[uuid][test] = False
+            LOGGER.debug("GPU {0} supports {1}".format(CONFIG.main["nvidia_cards"][uuid],
+                                                       self.device_support[uuid]))
+
+    def test_metric(self, func, *args):
+        """Tests a metric to see whether it is supported"""
+        try:
+            res = func(*args)
+            if res is None:
+                return False
+        except Exception:
+            return False
+        return True
+
+    async def get_stats(self):
+        """Fetches the point stats and pushes to out_data"""
+        self.out_data = []
+        nvidia_results = {}
+        for uuid, handle in self.nvidia_devices.items():
+            nvidia_results[uuid] = {}
+            for metric, enabled in self.device_support[uuid].items():
+                if not enabled:
+                    continue
+                if metric == "mem":
+                    res = self.py3nvml.nvmlDeviceGetMemoryInfo(handle)
+                    nvidia_results[uuid]["mem_free"] = res.free
+                    nvidia_results[uuid]["mem_used"] = res.used
+                    nvidia_results[uuid]["mem_total"] = res.total
+                    res = None
+                elif metric == "power_usage":
+                    res = self.py3nvml.nvmlDeviceGetPowerUsage(handle) / 1000
+                elif metric == "power_limit":
+                    res = self.py3nvml.nvmlDeviceGetPowerManagementLimit(handle) / 1000
+                elif metric == "util":
+                    res = self.py3nvml.nvmlDeviceGetUtilizationRates(handle)
+                    nvidia_results[uuid]["gpu_util"] = res.gpu
+                    nvidia_results[uuid]["mem_util"] = res.memory
+                    res = None
+                elif metric == "temp":
+                    res = self.py3nvml.nvmlDeviceGetTemperature(
+                        handle, self.py3nvml.NVML_TEMPERATURE_GPU
+                    )
+                elif metric == "fanspeed_percent":
+                    res = self.py3nvml.nvmlDeviceGetFanSpeed(handle)
+                elif metric == "core_clock":
+                    res = self.py3nvml.nvmlDeviceGetClockInfo(
+                        handle, self.py3nvml.NVML_CLOCK_GRAPHICS
+                    ) * 1000000
+                elif metric == "max_core_clock":
+                    res = self.py3nvml.nvmlDeviceGetMaxClockInfo(
+                        handle, self.py3nvml.NVML_CLOCK_GRAPHICS
+                    ) * 1000000
+                elif metric == "mem_clock":
+                    res = self.py3nvml.nvmlDeviceGetClockInfo(
+                        handle, self.py3nvml.NVML_CLOCK_MEM
+                    ) * 1000000
+                elif metric == "max_mem_clock":
+                    res = self.py3nvml.nvmlDeviceGetMaxClockInfo(
+                        handle, self.py3nvml.NVML_CLOCK_MEM
+                    ) * 1000000
+                if res is not None:
+                    nvidia_results[uuid][metric] = res
+            self.out_data.append({"measurement": "nvidia", **nvidia_results[uuid],
+                                  "tags": {"gpu": uuid}})
 
 
 class MemoryStats(BaseStat):
@@ -320,7 +437,7 @@ def main(args):
         client = influxdb.InfluxDBClient(**influx_args)
     try:
         stats_classes = [CPUStats(), MemoryStats(), DiskStorageStats(args["disk_paths"]),
-                         DiskIOStats(), NetIOStats(), SensorStats(), MiscStats()]
+                         DiskIOStats(), NetIOStats(), SensorStats(), MiscStats(), GPUStats()]
         modules = os.listdir(custom_dir)
         for item in modules:
             if not item.endswith(".py"):
