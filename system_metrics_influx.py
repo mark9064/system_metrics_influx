@@ -378,8 +378,7 @@ def main(args):
                             write_data.append(format_dataset)
                     elif isinstance(value.out_data, list):
                         for dataset in out_data:
-                            format_dataset = format_measurements(dataset, current_time,
-                                                                 key, tags=True)
+                            format_dataset = format_measurements(dataset, current_time, key)
                             if format_dataset is not None:
                                 write_data.append(format_dataset)
             if not args["dry_run"]:
@@ -400,7 +399,7 @@ def main(args):
     LOGGER.info("Exiting")
 
 
-def format_measurements(dataset, current_time, name, tags=False):
+def format_measurements(dataset, current_time, name):
     """Takes a measurement dict and formats it for influxdb"""
     if "measurement" not in dataset:
         LOGGER.error("No measurement found for {0}".format(name))
@@ -408,7 +407,7 @@ def format_measurements(dataset, current_time, name, tags=False):
     measurement = dataset.pop("measurement")
     if measurement is None:
         return None
-    if tags:
+    if "tags" in dataset:
         tags = dataset.pop("tags")
         return dict(measurement=measurement, time=current_time,
                     fields=dataset, tags=tags)
