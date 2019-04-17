@@ -304,6 +304,7 @@ def main(args):
     """Main function"""
     if CAUGHT_WARNINGS:
         LOGGER.info("Suppressed sys.excepthook warning")
+    custom_dir = "custom_plugins"
     save_rate = args["save_rate"]
     error_limit = args["error_limit"]
     pidfile = args["pidfile"]
@@ -315,8 +316,18 @@ def main(args):
     try:
         stats_classes = [CPUStats(), MemoryStats(), DiskStorageStats(args["disk_paths"]),
                          DiskIOStats(), NetIOStats(), SensorStats(), MiscStats()]
-        for module in stats_modules.USER_MODULES:
-            stats_classes.append(module())
+        modules = os.listdir(custom_dir)
+        for item in modules:
+            if not item.endswith(".py"):
+                continue
+            item = item[:-3]
+            try:
+                module = importlib.import_module("{0}.{1}".format(custom_dir, item))
+                for stat_class in module.ACTIVATED_METRICS:
+                    stats_classes.append(stat_class())
+                    LOGGER.debug("Loaded class {0} from {1}".format(stat_class.name, item))
+            except Exception:
+                LOGGER.warning("Failed to import plugin {0}".format(item))
         stats_classes = {x.name: x for x in stats_classes}
         BaseStat.save_rate = save_rate
         for item in stats_classes.values():
