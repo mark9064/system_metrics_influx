@@ -88,17 +88,6 @@ class GracefulKiller:
         self.kill_now = True
 
 
-class BaseStat:
-    """Base stats class for shared methods"""
-    save_rate = 0
-    target_time = 0
-
-    @classmethod
-    def set_time(cls, target_time):
-        """Sets the target time of the stats collection"""
-        cls.target_time = target_time
-
-
 class CPUStats(BaseStat):
     """All CPU related stats"""
     name = "CPU"
