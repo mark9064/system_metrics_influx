@@ -523,20 +523,19 @@ def initial_argparse():
         args = parse_config_file(args, cmd_args, specified)
     if args["log_level"] not in log_levels.keys():
         critical_exit((TypeError, None, None), message="Invalid loglevel specified")
-    LOGGER.setLevel(log_levels[args["log_level"]])
+    ROOT_LOGGER.setLevel(log_levels[args["log_level"]])
     if args["log_stdout"] and args["quiet"]:
         critical_exit((TypeError, None, None),
                       message="Log stdout and quiet cannot be specified together")
     if args["quiet"]:
-        LOGGER.handlers = []
+        ROOT_LOGGER.handlers = []
     if args["log_stdout"]:
-        # isinstance(LOGGER.handlers[0], logging.StreamHandler)
-        LOGGER.handlers[0].level = logging.DEBUG
+        ROOT_LOGGER.handlers[0].level = logging.DEBUG
     if args["logfile_path"] is not None:
         args["logfile_path"] = os.path.expanduser(args["logfile_path"])
-        LOGGER.addHandler(create_sublogger(logging.DEBUG, args["logfile_path"]))
-    if LOGGER.handlers == []:
-        LOGGER.disabled = True
+        ROOT_LOGGER.addHandler(create_sublogger(logging.DEBUG, args["logfile_path"]))
+    if ROOT_LOGGER.handlers == []:
+        ROOT_LOGGER.disabled = True
     if args["save_rate"] <= 0:
         critical_exit((TypeError, None, None),
                       message="Save rate must be a non zero positive integer")
@@ -617,7 +616,8 @@ if __name__ == "__main__":
         import trio
         CAUGHT_WARNINGS = handle_warnings()
     logging.Formatter.converter = time.gmtime
+    ROOT_LOGGER = logging.getLogger()
+    ROOT_LOGGER.setLevel(logging.INFO)
+    ROOT_LOGGER.addHandler(create_sublogger(logging.CRITICAL))
     LOGGER = logging.getLogger("system_metrics_influx")
-    LOGGER.setLevel(logging.INFO)
-    LOGGER.addHandler(create_sublogger(logging.CRITICAL))
     main(initial_argparse())
