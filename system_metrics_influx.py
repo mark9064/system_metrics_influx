@@ -611,6 +611,10 @@ def handle_warnings():
 
 
 if __name__ == "__main__":
+    os.chdir(os.path.dirname(os.path.abspath(__file__)))
+    if not os.path.exists("configured"):
+        os.mkdir("configured")
+    CONFIG = InternalConfig()
     with warnings.catch_warnings(record=True) as CAUGHT_WARNINGS:
         warnings.simplefilter("always")
         import trio
@@ -621,3 +625,4 @@ if __name__ == "__main__":
     ROOT_LOGGER.addHandler(create_sublogger(logging.CRITICAL))
     LOGGER = logging.getLogger("system_metrics_influx")
     main(initial_argparse())
+    CONFIG.write_config()
