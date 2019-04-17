@@ -1,4 +1,5 @@
 # example config for debugging
+# all the options in a config file are the exact same as the command line options
 max-consecutive-errors: 5
 dry-run: true
 log-stdout: true

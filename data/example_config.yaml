@@ -1,8 +1,0 @@
-# all the options in here are the exact same as the command line options
-username: root
-password: root
-max-consecutive-errors: 10
-log-stdout: true
-disk-paths:
-  - /
-  - /boot/efi

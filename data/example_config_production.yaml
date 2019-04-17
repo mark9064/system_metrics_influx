@@ -1,7 +1,11 @@
 # example production config
+# all the options in a config file are the exact same as the command line options
 quiet: true
 log-level: info # or warning
 pidfile: some/file
 logfile-path: some/other/file
 username: root
 password: mypass
+disk-paths:
+  - /
+  - /some/more/mountpoints/
