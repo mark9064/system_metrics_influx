@@ -343,8 +343,8 @@ def main(args):
                 if behind_secs >= save_rate / 2:
                     level = logging.WARNING
                 LOGGER.log(level, "Running behind by {0:.2f}s".format(behind_secs))
-                if behind_secs > 300:
-                    LOGGER.critical("Running behind by more than 5 mins, skipping data entry")
+                if behind_secs > 5:
+                    LOGGER.critical("Running behind by more than 5 seconds, skipping data entry")
                     target_time = math.ceil(time.time() + 1)
                     BaseStat.set_time(target_time)
             while time.time() < target_time - save_rate:
