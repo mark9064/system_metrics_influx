@@ -46,7 +46,11 @@ next iteration
 TODO
 
 cython version
-gpu support
+per net interface stats
+add photos to readme
+auto install dashboard with http API
+setting up grafana data source
+use .error to still write point stats
 """
 # pylint: disable=logging-format-interpolation
 import argparse
