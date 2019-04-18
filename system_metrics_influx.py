@@ -518,11 +518,13 @@ def format_measurements(dataset, current_time, name):
     measurement = dataset.pop("measurement")
     if measurement is None:
         return None
+    tags = {}
     if "tags" in dataset:
         tags = dataset.pop("tags")
-        return dict(measurement=measurement, time=current_time,
-                    fields=dataset, tags=tags)
-    return dict(measurement=measurement, time=current_time, fields=dataset)
+    if not dataset:
+        return None
+    return dict(measurement=measurement, time=current_time,
+                fields=dataset, tags=tags)
 
 
 async def collect_stats(stats_classes):
