@@ -221,10 +221,11 @@ def setup_nvidia(pip_prefix):
             if card_name in config.main["nvidia_seen_cardnames"]:
                 n_cards = config.main["nvidia_seen_cardnames"][card_name]
                 if n_cards == 1:
-                    for ext_uuid, ext_card_name in config.main["nvidia"].items():
+                    for ext_uuid, ext_card_name in config.main["nvidia_cards"].items():
                         if card_name == ext_card_name:
                             config.main["nvidia_cards"][ext_uuid] = "{0} 0".format(card_name)
                             config.main["nvidia_cards"][uuid] = "{0} 1".format(card_name)
+                            break
                 else:
                     config.main["nvidia_cards"][uuid] = "{0} {1}".format(card_name, n_cards)
                 config.main["nvidia_seen_cardnames"][card_name] += 1
