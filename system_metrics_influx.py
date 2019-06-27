@@ -72,7 +72,7 @@ import influxdb
 import psutil
 import yaml
 
-from common_lib import BaseStat, InternalConfig
+from common_lib import BaseStat, InternalConfig, format_error
 
 
 class GracefulKiller:

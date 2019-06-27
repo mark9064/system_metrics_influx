@@ -34,3 +34,17 @@ class BaseStat:
     def set_time(cls, target_time):
         """Sets the target time of the stats collection"""
         cls.target_time = target_time
+
+def format_error(exc_info, message=""):
+    """Returns a string of formatted exception info"""
+    if message:
+        message = "- {0} ".format(message)
+    if exc_info[1] is not None:
+        trace = ": {0}".format(exc_info[1])
+    else:
+        trace = ""
+    if exc_info[2] is not None:
+        line = "(L{0})".format(exc_info[2].tb_lineno)
+    else:
+        line = ""
+    return "{0} {1}{2}{3}".format(exc_info[0].__name__, message, line, trace)
