@@ -5,9 +5,12 @@ import json
 import os
 import pwd
 import shutil
+import string
 import subprocess
 import sys
 import time
+from collections import OrderedDict
+from operator import itemgetter
 
 
 def find_codename():
@@ -298,6 +301,9 @@ def setup_grafana():
     current_y_shift_performed = False
     y_shift_next = 0
     current_y_shift = 0
+    nvidia_cardlist = OrderedDict(sorted(config.main["nvidia_cards"].items(), key=itemgetter(1)))
+    if len(nvidia_cardlist) > 6:
+        raise NotImplementedError("Having more than 6 cards is currently not implemented")
     for index, item in enumerate(template["panels"]):
         new_y = item["gridPos"]["y"]
         if new_y != current_y:
@@ -310,7 +316,7 @@ def setup_grafana():
         if item["title"] in ("GPU utilisation", "GPU memory usage",
                              "GPU temperature / fanspeed", "GPU frequencies",
                              "GPU power usage"):
-            if not config.main["nvidia_cards"]:
+            if not nvidia_cardlist:
                 del out_config["panels"][index - index_shift]
                 index_shift += 1
                 if not current_y_shift_performed:
@@ -319,9 +325,13 @@ def setup_grafana():
                 continue
             target_templates = item["targets"]
             out_config["panels"][index - index_shift]["targets"] = []
-            for uuid, name in config.main["nvidia_cards"].items():
+            query_letter_index = 0
+            for uuid, name in nvidia_cardlist.items():
                 for target in target_templates:
+                    target = copy.deepcopy(target)
                     target["alias"] = "{0} {1}".format(name, target["alias"])
+                    target["refId"] = string.ascii_uppercase[query_letter_index]
+                    query_letter_index += 1
                     target["tags"][0]["value"] = uuid
                     out_config["panels"][index - index_shift]["targets"].append(target)
     json.dump(out_config, open(out_name, "w"), indent=2)
