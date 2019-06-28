@@ -233,7 +233,7 @@ def setup_nvidia(pip_prefix):
                 config.main["nvidia_cards"][uuid] = card_name
                 config.main["nvidia_seen_cardnames"][card_name] = 1
     print("All configured cards:")
-    [print("UUID {0}: {1}".format(k, v)) for k, v in config.main["nvidia_cards"].items()]
+    [print("UUID {0}: {1}".format(*pair)) for pair in config.main["nvidia_cards"].items()]
     for uuid, name in config.main["nvidia_cards"].items():
         if answer_convert(input("Rename {0}? ({1}) (y/n): ".format(name, uuid))):
             new_name = input("Enter new name for {0}: ".format(name))
