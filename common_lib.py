@@ -1,5 +1,7 @@
 """Common classes and methods for sharing between installer, main program and plugins"""
 import os
+import traceback
+
 import yaml
 
 
@@ -44,7 +46,33 @@ def format_error(exc_info, message=""):
     else:
         trace = ""
     if exc_info[2] is not None:
-        line = "(L{0})".format(exc_info[2].tb_lineno)
+        cwd = os.getcwd()
+        full_tb = traceback.extract_tb(exc_info[2])
+        for index, frame_summary in enumerate(full_tb):
+            if index == len(full_tb) - 1:
+                lineno = frame_summary.lineno
+                filename = frame_summary.filename
+                if not index:
+                    called_by = None
+                else:
+                    called_by = full_tb[index - 1].name
+                break
+            if not cwd in full_tb[index + 1].filename:
+                # next level is invalid
+                lineno = frame_summary.lineno
+                filename = frame_summary.filename
+                if not index:
+                    called_by = None
+                else:
+                    called_by = full_tb[index - 1].name
+                break
+
+        if called_by is not None:
+            called_by = "called by {0}".format(called_by)
+        else:
+            called_by = "no direct caller"
+        filename = filename[filename.index(cwd):]
+        line = "(L{0} in {1}, {2})".format(lineno, filename, called_by)
     else:
         line = ""
     return "{0} {1}{2}{3}".format(exc_info[0].__name__, message, line, trace)
