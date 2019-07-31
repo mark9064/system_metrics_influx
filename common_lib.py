@@ -37,10 +37,13 @@ class BaseStat:
         """Sets the target time of the stats collection"""
         cls.target_time = target_time
 
-def format_error(exc_info, message=""):
+def format_error(exc_info, message="", message_before=False):
     """Returns a string of formatted exception info"""
     if message:
-        message = "- {0} ".format(message)
+        if message_before:
+            message = "{0}: ".format(message)
+        else:
+            message = "- {0}".format(message)
     if exc_info[1] is not None:
         trace = ": {0}".format(exc_info[1])
     else:
@@ -72,7 +75,9 @@ def format_error(exc_info, message=""):
         else:
             called_by = "no direct caller"
         filename = filename[filename.index(cwd):]
-        line = "(L{0} in {1}, {2})".format(lineno, filename, called_by)
+        line = " (L{0} in {1}, {2})".format(lineno, filename, called_by)
     else:
         line = ""
+    if message_before:
+        return "{0}{1}{2}{3}".format(message, exc_info[0].__name__, line, trace)
     return "{0} {1}{2}{3}".format(exc_info[0].__name__, message, line, trace)

@@ -425,7 +425,9 @@ def main(args):
                     stats_classes.append(stat_class())
                     LOGGER.debug("Loaded class {0} from {1}".format(stat_class.name, item))
             except Exception:
-                LOGGER.warning("Failed to import plugin {0}".format(item))
+                exc = sys.exc_info()
+                LOGGER.error(format_error(exc, message="Failed to import plugin {0}".format(item),
+                                          message_before=True))
         stats_classes = {x.name: x for x in stats_classes}
         BaseStat.save_rate = save_rate
         for item in stats_classes.values():
@@ -464,8 +466,8 @@ def main(args):
                 cumulative_errors += 1
                 for key, value in errors.items():
                     if value:
-                        LOGGER.error("Error in stats collect for {0}: {1}"
-                                     .format(key, format_error(value)))
+                        LOGGER.error(format_error(value, message="Error in stats collect for {0}"
+                                                  .format(key), message_before=True))
             write_data = []
             for key, value in stats_classes.items():
                 if not errors[key]:
@@ -486,7 +488,7 @@ def main(args):
             cumulative_errors = 0
         except Exception:
             exc = sys.exc_info()
-            LOGGER.error("Caught exception: {0}".format(format_error(exc)))
+            LOGGER.error(format_error(exc, message="Caught exception", message_before=True))
             cumulative_errors += 1
         finally:
             target_time += save_rate
