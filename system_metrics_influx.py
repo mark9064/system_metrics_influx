@@ -107,7 +107,8 @@ class CPUStats(BaseStat):
     async def poll_stats(self):
         """Fetches the polling stats"""
         self.poll_data = dict(util=[], freq=[], times=[])
-        while time.time() < self.target_time - 0.2:
+        while (time.time() < self.target_time - 0.2) or initial:
+            initial = False
             self.poll_data["util"].append(psutil.cpu_percent(percpu=True))
             self.poll_data["freq"].append(psutil.cpu_freq(percpu=True))
             self.poll_data["times"].append(psutil.cpu_times_percent(interval=0.0))
