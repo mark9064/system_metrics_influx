@@ -94,7 +94,7 @@ class CPUStats(BaseStat):
     def __init__(self):
         self.cpu_time_fields = psutil.cpu_times_percent(interval=0.0)._fields
         self.cpu_stats_fields = psutil.cpu_stats()._fields
-        self.poll_data = dict(util=[], freq=[], times=[])
+        self.poll_data = dict(util=[], freq=[])
         self.cpu_persistent = []
         self.out_data = {"measurement": "cpu"}
         self.last_end_time = 0
@@ -106,12 +106,12 @@ class CPUStats(BaseStat):
 
     async def poll_stats(self):
         """Fetches the polling stats"""
-        self.poll_data = dict(util=[], freq=[], times=[])
+        self.poll_data = dict(util=[], freq=[])
+        initial = True
         while (time.time() < self.target_time - 0.2) or initial:
             initial = False
             self.poll_data["util"].append(psutil.cpu_percent(percpu=True))
             self.poll_data["freq"].append(psutil.cpu_freq(percpu=True))
-            self.poll_data["times"].append(psutil.cpu_times_percent(interval=0.0))
             next_poll_time = time.time() + self.save_rate / 10
             if next_poll_time > self.target_time:
                 break
@@ -120,6 +120,7 @@ class CPUStats(BaseStat):
     async def get_stats(self):
         """Fetches the point stats and pushes to out_data"""
         current_stats = psutil.cpu_stats()
+        times = psutil.cpu_times_percent(interval=0.0)
         time_delta = time.time() - self.last_end_time
         self.last_end_time = time.time()
         stats_delta = [round((current_stats[i] - self.cpu_persistent[i]) / time_delta)
@@ -128,7 +129,6 @@ class CPUStats(BaseStat):
         utilisation = [round(statistics.mean(x), 2) for x in zip(*self.poll_data["util"])]
         frequency = [round(statistics.mean([y.current * 1000000 for y in x]), 2)
                      for x in zip(*self.poll_data["freq"])]
-        times = [round(statistics.mean(x), 2) for x in zip(*self.poll_data["times"])]
         self.out_data = {"measurement": "cpu"}
         for item in ["ctx_switches", "interrupts"]:
             self.out_data[item] = stats_delta[self.cpu_stats_fields.index(item)]
