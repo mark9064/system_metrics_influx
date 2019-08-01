@@ -54,16 +54,16 @@ def format_error(exc_info, message="", message_before=False):
         for index, frame_summary in enumerate(full_tb):
             if index == len(full_tb) - 1:
                 lineno = frame_summary.lineno
-                filename = frame_summary.filename
+                filename = os.path.abspath(frame_summary.filename)
                 if not index:
                     called_by = None
                 else:
                     called_by = full_tb[index - 1].name
                 break
-            if not cwd in full_tb[index + 1].filename:
+            if not cwd in os.path.abspath(full_tb[index + 1].filename):
                 # next level is invalid
                 lineno = frame_summary.lineno
-                filename = frame_summary.filename
+                filename = os.path.abspath(frame_summary.filename)
                 if not index:
                     called_by = None
                 else:
@@ -74,7 +74,7 @@ def format_error(exc_info, message="", message_before=False):
             called_by = "called by {0}".format(called_by)
         else:
             called_by = "no direct caller"
-        filename = filename[filename.index(cwd):]
+        filename = filename[len(cwd) + 1:]
         line = " (L{0} in {1}, {2})".format(lineno, filename, called_by)
     else:
         line = ""
