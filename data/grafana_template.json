@@ -20,13 +20,13 @@
       "type": "grafana",
       "id": "grafana",
       "name": "Grafana",
-      "version": "6.1.4"
+      "version": "7.1.4"
     },
     {
       "type": "panel",
       "id": "grafana-clock-panel",
       "name": "Clock",
-      "version": "1.0.2"
+      "version": "1.0.3"
     },
     {
       "type": "panel",
@@ -50,7 +50,7 @@
       "type": "panel",
       "id": "text",
       "name": "Text",
-      "version": ""
+      "version": "7.1.0"
     }
   ],
   "annotations": {
@@ -71,7 +71,6 @@
   "gnetId": 2387,
   "graphTooltip": 0,
   "id": null,
-  "iteration": 1555419931406,
   "links": [],
   "panels": [
     {
@@ -84,7 +83,15 @@
       "dashes": false,
       "datasource": "${DS_INFLUXDB}",
       "decimals": 2,
+      "fieldConfig": {
+        "defaults": {
+          "custom": {},
+          "links": []
+        },
+        "overrides": []
+      },
       "fill": 0,
+      "fillGradient": 0,
       "grid": {
         "max": null,
         "min": null
@@ -95,6 +102,7 @@
         "x": 0,
         "y": 0
       },
+      "hiddenSeries": false,
       "hideTimeOverride": false,
       "id": 4,
       "interactive": true,
@@ -115,9 +123,9 @@
       "linewidth": 2,
       "links": [],
       "nullPointMode": "null",
-      "options": false,
       "paceLength": 10,
       "percentage": false,
+      "pluginVersion": "7.1.4",
       "pointradius": 5,
       "points": false,
       "renderer": "flot",
@@ -151,7 +159,7 @@
           "measurement": "misc",
           "orderByTime": "ASC",
           "policy": "default",
-          "query": "SELECT mean(\"min1\") FROM \"localhost.load\" WHERE $timeFilter GROUP BY time($interval) fill(null)",
+          "query": "",
           "refId": "A",
           "resultFormat": "time_series",
           "select": [
@@ -194,7 +202,7 @@
           "measurement": "misc",
           "orderByTime": "ASC",
           "policy": "default",
-          "query": "SELECT mean(\"min5\") FROM \"localhost.load\" WHERE $timeFilter GROUP BY time($interval) fill(null)",
+          "query": "",
           "refId": "B",
           "resultFormat": "time_series",
           "select": [
@@ -237,7 +245,7 @@
           "measurement": "misc",
           "orderByTime": "ASC",
           "policy": "default",
-          "query": "SELECT mean(\"min15\") FROM \"localhost.load\" WHERE $timeFilter GROUP BY time($interval) fill(null)",
+          "query": "",
           "refId": "C",
           "resultFormat": "time_series",
           "select": [
@@ -312,6 +320,12 @@
       "datasource": "${DS_INFLUXDB}",
       "editable": true,
       "error": false,
+      "fieldConfig": {
+        "defaults": {
+          "custom": {}
+        },
+        "overrides": []
+      },
       "format": "none",
       "gauge": {
         "maxValue": 100,
@@ -377,7 +391,7 @@
           "measurement": "misc",
           "orderByTime": "ASC",
           "policy": "default",
-          "query": "SELECT last(\"processes\") FROM \"misc\" WHERE $timeFilter GROUP BY time($__interval)",
+          "query": "",
           "rawQuery": false,
           "refId": "A",
           "resultFormat": "time_series",
@@ -423,6 +437,12 @@
       ],
       "datasource": "${DS_INFLUXDB}",
       "decimals": 0,
+      "fieldConfig": {
+        "defaults": {
+          "custom": {}
+        },
+        "overrides": []
+      },
       "format": "dtdurations",
       "gauge": {
         "maxValue": 100,
@@ -493,7 +513,7 @@
           "measurement": "misc",
           "orderByTime": "ASC",
           "policy": "default",
-          "query": "SELECT last(\"seconds\")  FROM \"localhost.uptime\" WHERE $timeFilter GROUP BY time($__interval) fill(null) ",
+          "query": "",
           "rawQuery": false,
           "refId": "A",
           "resultFormat": "time_series",
@@ -535,11 +555,18 @@
         "endCountdownTime": null,
         "endText": ""
       },
+      "datasource": "${DS_INFLUXDB}",
       "dateSettings": {
         "dateFormat": "YYYY-MM-DD",
         "fontSize": "20px",
         "fontWeight": "normal",
         "showDate": true
+      },
+      "fieldConfig": {
+        "defaults": {
+          "custom": {}
+        },
+        "overrides": []
       },
       "gridPos": {
         "h": 6,
@@ -560,6 +587,13 @@
         "fontSize": "50px",
         "fontWeight": "bold"
       },
+      "timezone": null,
+      "timezoneSettings": {
+        "fontSize": "12px",
+        "fontWeight": "normal",
+        "showTimezone": false,
+        "zoneFormat": "offsetAbbv"
+      },
       "title": "Current time",
       "transparent": true,
       "type": "grafana-clock-panel"
@@ -572,7 +606,15 @@
       "datasource": "${DS_INFLUXDB}",
       "editable": true,
       "error": false,
+      "fieldConfig": {
+        "defaults": {
+          "custom": {},
+          "links": []
+        },
+        "overrides": []
+      },
       "fill": 10,
+      "fillGradient": 0,
       "grid": {},
       "gridPos": {
         "h": 7,
@@ -580,6 +622,7 @@
         "x": 0,
         "y": 6
       },
+      "hiddenSeries": false,
       "id": 6,
       "interval": "",
       "legend": {
@@ -599,6 +642,7 @@
       "nullPointMode": "null",
       "paceLength": 10,
       "percentage": false,
+      "pluginVersion": "7.1.4",
       "pointradius": 0.5,
       "points": false,
       "renderer": "flot",
@@ -609,13 +653,19 @@
       "steppedLine": false,
       "targets": [
         {
-          "alias": "$col",
+          "alias": "CPU$tag_cpu",
           "groupBy": [
             {
               "params": [
                 "$__interval"
               ],
               "type": "time"
+            },
+            {
+              "params": [
+                "cpu"
+              ],
+              "type": "tag"
             },
             {
               "params": [
@@ -628,15 +678,15 @@
           "measurement": "cpu",
           "orderByTime": "ASC",
           "policy": "default",
-          "query": "SELECT mean(/^cpu\\d+$/) FROM \"cpu\" WHERE $timeFilter GROUP BY time($__interval) fill(null)",
-          "rawQuery": true,
+          "query": "",
+          "rawQuery": false,
           "refId": "A",
           "resultFormat": "time_series",
           "select": [
             [
               {
                 "params": [
-                  "/(cpu)\\d+/"
+                  "util"
                 ],
                 "type": "field"
               },
@@ -646,7 +696,13 @@
               }
             ]
           ],
-          "tags": []
+          "tags": [
+            {
+              "key": "cpu",
+              "operator": "=~",
+              "value": "/.*/"
+            }
+          ]
         }
       ],
       "thresholds": [],
@@ -698,7 +754,15 @@
       "decimals": 2,
       "editable": true,
       "error": false,
+      "fieldConfig": {
+        "defaults": {
+          "custom": {},
+          "links": []
+        },
+        "overrides": []
+      },
       "fill": 0,
+      "fillGradient": 0,
       "grid": {},
       "gridPos": {
         "h": 7,
@@ -706,6 +770,7 @@
         "x": 12,
         "y": 6
       },
+      "hiddenSeries": false,
       "id": 7,
       "legend": {
         "avg": true,
@@ -723,6 +788,7 @@
       "nullPointMode": "null",
       "paceLength": 10,
       "percentage": false,
+      "pluginVersion": "7.1.4",
       "pointradius": 5,
       "points": false,
       "renderer": "flot",
@@ -758,7 +824,7 @@
           "measurement": "memory",
           "orderByTime": "ASC",
           "policy": "default",
-          "query": "SELECT mean(\"used\") FROM \"localhost.mem\" WHERE $timeFilter GROUP BY time($interval)",
+          "query": "",
           "refId": "A",
           "resultFormat": "time_series",
           "select": [
@@ -800,7 +866,7 @@
           "measurement": "memory",
           "orderByTime": "ASC",
           "policy": "default",
-          "query": "SELECT mean(\"total\") FROM \"memory\" WHERE $timeFilter GROUP BY time($__interval) fill(null)",
+          "query": "",
           "rawQuery": false,
           "refId": "B",
           "resultFormat": "time_series",
@@ -870,7 +936,15 @@
       "datasource": "${DS_INFLUXDB}",
       "editable": true,
       "error": false,
-      "fill": 3,
+      "fieldConfig": {
+        "defaults": {
+          "custom": {},
+          "links": []
+        },
+        "overrides": []
+      },
+      "fill": 1,
+      "fillGradient": 0,
       "grid": {},
       "gridPos": {
         "h": 7,
@@ -878,6 +952,7 @@
         "x": 0,
         "y": 13
       },
+      "hiddenSeries": false,
       "id": 9,
       "legend": {
         "avg": true,
@@ -894,6 +969,7 @@
       "nullPointMode": "null",
       "paceLength": 10,
       "percentage": false,
+      "pluginVersion": "7.1.4",
       "pointradius": 5,
       "points": false,
       "renderer": "flot",
@@ -903,13 +979,19 @@
       "steppedLine": false,
       "targets": [
         {
-          "alias": "RX Speed",
+          "alias": "$tag_nic RX",
           "groupBy": [
             {
               "params": [
                 "$__interval"
               ],
               "type": "time"
+            },
+            {
+              "params": [
+                "nic"
+              ],
+              "type": "tag"
             },
             {
               "params": [
@@ -943,16 +1025,28 @@
               }
             ]
           ],
-          "tags": []
+          "tags": [
+            {
+              "key": "nic",
+              "operator": "=~",
+              "value": "/\\w+\\d+/"
+            }
+          ]
         },
         {
-          "alias": "TX Speed",
+          "alias": "$tag_nic TX",
           "groupBy": [
             {
               "params": [
                 "$__interval"
               ],
               "type": "time"
+            },
+            {
+              "params": [
+                "nic"
+              ],
+              "type": "tag"
             },
             {
               "params": [
@@ -986,7 +1080,13 @@
               }
             ]
           ],
-          "tags": []
+          "tags": [
+            {
+              "key": "nic",
+              "operator": "=~",
+              "value": "/\\w+\\d+/"
+            }
+          ]
         }
       ],
       "thresholds": [],
@@ -1036,7 +1136,15 @@
       "datasource": "${DS_INFLUXDB}",
       "editable": true,
       "error": false,
+      "fieldConfig": {
+        "defaults": {
+          "custom": {},
+          "links": []
+        },
+        "overrides": []
+      },
       "fill": 0,
+      "fillGradient": 0,
       "grid": {},
       "gridPos": {
         "h": 7,
@@ -1044,6 +1152,7 @@
         "x": 12,
         "y": 13
       },
+      "hiddenSeries": false,
       "id": 11,
       "legend": {
         "avg": false,
@@ -1060,6 +1169,7 @@
       "nullPointMode": "null",
       "paceLength": 10,
       "percentage": false,
+      "pluginVersion": "7.1.4",
       "pointradius": 5,
       "points": false,
       "renderer": "flot",
@@ -1095,14 +1205,14 @@
           "measurement": "disk",
           "orderByTime": "ASC",
           "policy": "default",
-          "query": "SELECT mean(\"/.used\") FROM \"localhost.fs\" WHERE $timeFilter GROUP BY time($interval) fill(null)",
+          "query": "",
           "refId": "A",
           "resultFormat": "time_series",
           "select": [
             [
               {
                 "params": [
-                  "/_used"
+                  "used"
                 ],
                 "type": "field"
               },
@@ -1113,7 +1223,13 @@
             ]
           ],
           "series": "fs",
-          "tags": []
+          "tags": [
+            {
+              "key": "disk",
+              "operator": "=",
+              "value": "/"
+            }
+          ]
         },
         {
           "alias": "Max",
@@ -1137,14 +1253,14 @@
           "measurement": "disk",
           "orderByTime": "ASC",
           "policy": "default",
-          "query": "SELECT mean(\"/.size\") FROM \"localhost.fs\" WHERE $timeFilter GROUP BY time($interval) fill(null)",
+          "query": "",
           "refId": "B",
           "resultFormat": "time_series",
           "select": [
             [
               {
                 "params": [
-                  "/_total"
+                  "total"
                 ],
                 "type": "field"
               },
@@ -1155,7 +1271,13 @@
             ]
           ],
           "series": "fs",
-          "tags": [],
+          "tags": [
+            {
+              "key": "disk",
+              "operator": "=",
+              "value": "/"
+            }
+          ],
           "target": ""
         }
       ],
@@ -1206,7 +1328,15 @@
       "datasource": "${DS_INFLUXDB}",
       "editable": true,
       "error": false,
-      "fill": 3,
+      "fieldConfig": {
+        "defaults": {
+          "custom": {},
+          "links": []
+        },
+        "overrides": []
+      },
+      "fill": 0,
+      "fillGradient": 0,
       "grid": {},
       "gridPos": {
         "h": 7,
@@ -1214,6 +1344,7 @@
         "x": 0,
         "y": 20
       },
+      "hiddenSeries": false,
       "id": 10,
       "legend": {
         "avg": true,
@@ -1230,6 +1361,7 @@
       "nullPointMode": "null",
       "paceLength": 10,
       "percentage": false,
+      "pluginVersion": "7.1.4",
       "pointradius": 5,
       "points": false,
       "renderer": "flot",
@@ -1239,7 +1371,7 @@
       "steppedLine": false,
       "targets": [
         {
-          "alias": "Read",
+          "alias": "$tag_disk Read",
           "column": "sda2.read_bytes",
           "dsType": "influxdb",
           "function": "mean",
@@ -1252,6 +1384,12 @@
             },
             {
               "params": [
+                "disk"
+              ],
+              "type": "tag"
+            },
+            {
+              "params": [
                 "null"
               ],
               "type": "fill"
@@ -1260,7 +1398,8 @@
           "measurement": "diskio",
           "orderByTime": "ASC",
           "policy": "default",
-          "query": "SELECT mean(\"sda2.read_bytes\")/mean(\"sda2.time_since_update\")*8 FROM \"localhost.diskio\" WHERE $timeFilter GROUP BY time($interval) fill(null)",
+          "query": "",
+          "rawQuery": false,
           "refId": "A",
           "resultFormat": "time_series",
           "select": [
@@ -1278,10 +1417,16 @@
             ]
           ],
           "series": "diskio",
-          "tags": []
+          "tags": [
+            {
+              "key": "disk",
+              "operator": "=~",
+              "value": "/.*/"
+            }
+          ]
         },
         {
-          "alias": "Write",
+          "alias": "$tag_disk Write",
           "column": "sda2.write_bytes",
           "dsType": "influxdb",
           "function": "mean",
@@ -1294,6 +1439,12 @@
             },
             {
               "params": [
+                "disk"
+              ],
+              "type": "tag"
+            },
+            {
+              "params": [
                 "null"
               ],
               "type": "fill"
@@ -1302,7 +1453,8 @@
           "measurement": "diskio",
           "orderByTime": "ASC",
           "policy": "default",
-          "query": "SELECT mean(\"sda2.write_bytes\")/mean(\"sda2.time_since_update\")*8 FROM \"localhost.diskio\" WHERE $timeFilter GROUP BY time($interval) fill(null)",
+          "query": "",
+          "rawQuery": false,
           "refId": "B",
           "resultFormat": "time_series",
           "select": [
@@ -1320,7 +1472,13 @@
             ]
           ],
           "series": "diskio",
-          "tags": [],
+          "tags": [
+            {
+              "key": "disk",
+              "operator": "=~",
+              "value": "/.*/"
+            }
+          ],
           "target": ""
         }
       ],
@@ -1351,7 +1509,7 @@
           "show": true
         },
         {
-          "format": "short",
+          "format": "percent",
           "logBase": 1,
           "max": null,
           "min": null,
@@ -1366,6 +1524,37 @@
     {
       "cacheTimeout": null,
       "datasource": "${DS_INFLUXDB}",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "custom": {},
+          "decimals": 1,
+          "mappings": [],
+          "max": 100,
+          "min": 0,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "#7EB26D",
+                "value": null
+              },
+              {
+                "color": "#FF9830",
+                "value": 70
+              },
+              {
+                "color": "#F2495C",
+                "value": 90
+              }
+            ]
+          },
+          "unit": "percent"
+        },
+        "overrides": []
+      },
       "gridPos": {
         "h": 7,
         "w": 6,
@@ -1376,38 +1565,18 @@
       "id": 16,
       "links": [],
       "options": {
-        "maxValue": 100,
-        "minValue": 0,
         "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "last"
+          ],
+          "fields": "",
+          "values": false
+        },
         "showThresholdLabels": false,
-        "showThresholdMarkers": true,
-        "thresholds": [
-          {
-            "color": "#7EB26D",
-            "index": 0,
-            "value": null
-          },
-          {
-            "color": "#FF9830",
-            "index": 1,
-            "value": 70
-          },
-          {
-            "color": "#F2495C",
-            "index": 2,
-            "value": 90
-          }
-        ],
-        "valueMappings": [],
-        "valueOptions": {
-          "decimals": 1,
-          "prefix": "",
-          "stat": "last",
-          "suffix": "",
-          "unit": "percent"
-        }
+        "showThresholdMarkers": true
       },
-      "pluginVersion": "6.1.4",
+      "pluginVersion": "7.1.4",
       "targets": [
         {
           "column": "\"/.percent\"",
@@ -1424,7 +1593,8 @@
           "measurement": "memory",
           "orderByTime": "ASC",
           "policy": "default",
-          "query": "SELECT mean(\"/.percent\") FROM \"localhost.fs\" WHERE $timeFilter GROUP BY time($interval)",
+          "query": "",
+          "rawQuery": false,
           "refId": "A",
           "resultFormat": "time_series",
           "select": [
@@ -1445,12 +1615,45 @@
           "tags": []
         }
       ],
+      "timeFrom": null,
+      "timeShift": null,
       "title": "Memory usage",
       "type": "gauge"
     },
     {
       "cacheTimeout": null,
       "datasource": "${DS_INFLUXDB}",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "custom": {},
+          "decimals": 1,
+          "mappings": [],
+          "max": 100,
+          "min": 0,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "#7EB26D",
+                "value": null
+              },
+              {
+                "color": "#FF9830",
+                "value": 70
+              },
+              {
+                "color": "#F2495C",
+                "value": 90
+              }
+            ]
+          },
+          "unit": "percent"
+        },
+        "overrides": []
+      },
       "gridPos": {
         "h": 7,
         "w": 6,
@@ -1461,38 +1664,18 @@
       "id": 35,
       "links": [],
       "options": {
-        "maxValue": 100,
-        "minValue": 0,
         "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "last"
+          ],
+          "fields": "",
+          "values": false
+        },
         "showThresholdLabels": false,
-        "showThresholdMarkers": true,
-        "thresholds": [
-          {
-            "color": "#7EB26D",
-            "index": 0,
-            "value": null
-          },
-          {
-            "color": "#FF9830",
-            "index": 1,
-            "value": 70
-          },
-          {
-            "color": "#F2495C",
-            "index": 2,
-            "value": 90
-          }
-        ],
-        "valueMappings": [],
-        "valueOptions": {
-          "decimals": 1,
-          "prefix": "",
-          "stat": "last",
-          "suffix": "",
-          "unit": "percent"
-        }
+        "showThresholdMarkers": true
       },
-      "pluginVersion": "6.1.4",
+      "pluginVersion": "7.1.4",
       "targets": [
         {
           "column": "\"/.percent\"",
@@ -1509,14 +1692,15 @@
           "measurement": "disk",
           "orderByTime": "ASC",
           "policy": "default",
-          "query": "SELECT mean(\"/.percent\") FROM \"localhost.fs\" WHERE $timeFilter GROUP BY time($interval)",
+          "query": "",
+          "rawQuery": false,
           "refId": "A",
           "resultFormat": "time_series",
           "select": [
             [
               {
                 "params": [
-                  "/_percent"
+                  "percent"
                 ],
                 "type": "field"
               },
@@ -1527,7 +1711,13 @@
             ]
           ],
           "series": "fs",
-          "tags": []
+          "tags": [
+            {
+              "key": "disk",
+              "operator": "=",
+              "value": "/"
+            }
+          ]
         }
       ],
       "title": "Disk usage",
@@ -1538,13 +1728,23 @@
       "bars": false,
       "dashLength": 10,
       "dashes": false,
+      "datasource": "${DS_INFLUXDB}",
+      "fieldConfig": {
+        "defaults": {
+          "custom": {},
+          "links": []
+        },
+        "overrides": []
+      },
       "fill": 3,
+      "fillGradient": 0,
       "gridPos": {
         "h": 7,
         "w": 12,
         "x": 0,
         "y": 27
       },
+      "hiddenSeries": false,
       "id": 44,
       "legend": {
         "avg": true,
@@ -1560,6 +1760,7 @@
       "links": [],
       "nullPointMode": "null",
       "percentage": false,
+      "pluginVersion": "7.1.4",
       "pointradius": 2,
       "points": false,
       "renderer": "flot",
@@ -1701,13 +1902,23 @@
       "bars": false,
       "dashLength": 10,
       "dashes": false,
+      "datasource": "${DS_INFLUXDB}",
+      "fieldConfig": {
+        "defaults": {
+          "custom": {},
+          "links": []
+        },
+        "overrides": []
+      },
       "fill": 0,
+      "fillGradient": 0,
       "gridPos": {
         "h": 7,
         "w": 12,
         "x": 12,
         "y": 27
       },
+      "hiddenSeries": false,
       "id": 45,
       "legend": {
         "avg": true,
@@ -1723,6 +1934,7 @@
       "links": [],
       "nullPointMode": "null",
       "percentage": false,
+      "pluginVersion": "7.1.4",
       "pointradius": 2,
       "points": false,
       "renderer": "flot",
@@ -1862,8 +2074,15 @@
     },
     {
       "content": "",
+      "datasource": "${DS_INFLUXDB}",
       "editable": true,
       "error": false,
+      "fieldConfig": {
+        "defaults": {
+          "custom": {}
+        },
+        "overrides": []
+      },
       "gridPos": {
         "h": 1,
         "w": 24,
@@ -1873,80 +2092,63 @@
       "id": 13,
       "links": [],
       "mode": "markdown",
+      "options": {
+        "content": "",
+        "mode": "markdown"
+      },
+      "pluginVersion": "7.1.0",
       "style": {},
       "title": "CPU details",
       "type": "text"
     },
     {
-      "aliasColors": {
-        "max": "#890F02"
-      },
+      "aliasColors": {},
       "bars": false,
       "dashLength": 10,
       "dashes": false,
       "datasource": "${DS_INFLUXDB}",
-      "editable": true,
-      "error": false,
+      "decimals": 2,
+      "fieldConfig": {
+        "defaults": {
+          "custom": {},
+          "links": []
+        },
+        "overrides": []
+      },
       "fill": 0,
-      "grid": {},
+      "fillGradient": 0,
       "gridPos": {
-        "h": 6,
-        "w": 12,
+        "h": 12,
+        "w": 24,
         "x": 0,
         "y": 35
       },
-      "id": 26,
+      "hiddenSeries": false,
+      "id": 51,
       "legend": {
-        "avg": false,
+        "avg": true,
         "current": false,
-        "max": false,
-        "min": false,
-        "show": false,
+        "max": true,
+        "min": true,
+        "show": true,
         "total": false,
-        "values": false
+        "values": true
       },
       "lines": true,
-      "linewidth": 2,
-      "links": [],
+      "linewidth": 1,
       "nullPointMode": "null",
-      "paceLength": 10,
       "percentage": false,
-      "pointradius": 5,
+      "pluginVersion": "7.1.4",
+      "pointradius": 2,
       "points": false,
       "renderer": "flot",
-      "seriesOverrides": [
-        {
-          "alias": "max",
-          "color": "rgb(255, 0, 0)",
-          "fillBelowTo": "mean",
-          "lines": false
-        },
-        {
-          "alias": "mean",
-          "zindex": 1
-        },
-        {
-          "alias": "min",
-          "color": "#00ffff",
-          "lines": false
-        },
-        {
-          "alias": "mean_shade",
-          "color": "#00ffff",
-          "fillBelowTo": "min",
-          "hideTooltip": true,
-          "lines": false
-        }
-      ],
+      "seriesOverrides": [],
       "spaceLength": 10,
       "stack": false,
       "steppedLine": false,
       "targets": [
         {
-          "alias": "mean",
-          "column": "system",
-          "dsType": "influxdb",
-          "function": "mean",
+          "alias": "CPU user",
           "groupBy": [
             {
               "params": [
@@ -1961,11 +2163,9 @@
               "type": "fill"
             }
           ],
-          "interval": "60s",
           "measurement": "cpu",
           "orderByTime": "ASC",
           "policy": "default",
-          "query": "SELECT mean(\"system\") FROM \"localhost.cpu\" WHERE $timeFilter GROUP BY time($interval)",
           "refId": "A",
           "resultFormat": "time_series",
           "select": [
@@ -1982,14 +2182,10 @@
               }
             ]
           ],
-          "series": "cpu",
           "tags": []
         },
         {
-          "alias": "min",
-          "column": "system",
-          "dsType": "influxdb",
-          "function": "min",
+          "alias": "CPU system",
           "groupBy": [
             {
               "params": [
@@ -2004,106 +2200,16 @@
               "type": "fill"
             }
           ],
-          "interval": "60s",
           "measurement": "cpu",
           "orderByTime": "ASC",
           "policy": "default",
-          "query": "SELECT min(\"system\") FROM \"localhost.cpu\" WHERE $timeFilter GROUP BY time($interval)",
           "refId": "B",
           "resultFormat": "time_series",
           "select": [
             [
               {
                 "params": [
-                  "user"
-                ],
-                "type": "field"
-              },
-              {
-                "params": [],
-                "type": "min"
-              }
-            ]
-          ],
-          "series": "cpu",
-          "tags": [],
-          "target": ""
-        },
-        {
-          "alias": "max",
-          "column": "system",
-          "dsType": "influxdb",
-          "function": "max",
-          "groupBy": [
-            {
-              "params": [
-                "$__interval"
-              ],
-              "type": "time"
-            },
-            {
-              "params": [
-                "null"
-              ],
-              "type": "fill"
-            }
-          ],
-          "interval": "60s",
-          "measurement": "cpu",
-          "orderByTime": "ASC",
-          "policy": "default",
-          "query": "SELECT max(\"system\") FROM \"localhost.cpu\" WHERE $timeFilter GROUP BY time($interval)",
-          "refId": "C",
-          "resultFormat": "time_series",
-          "select": [
-            [
-              {
-                "params": [
-                  "user"
-                ],
-                "type": "field"
-              },
-              {
-                "params": [],
-                "type": "max"
-              }
-            ]
-          ],
-          "series": "cpu",
-          "tags": [],
-          "target": ""
-        },
-        {
-          "alias": "mean_shade",
-          "column": "system",
-          "dsType": "influxdb",
-          "function": "mean",
-          "groupBy": [
-            {
-              "params": [
-                "$__interval"
-              ],
-              "type": "time"
-            },
-            {
-              "params": [
-                "null"
-              ],
-              "type": "fill"
-            }
-          ],
-          "interval": "60s",
-          "measurement": "cpu",
-          "orderByTime": "ASC",
-          "policy": "default",
-          "query": "SELECT mean(\"system\") FROM \"localhost.cpu\" WHERE $timeFilter GROUP BY time($interval)",
-          "refId": "D",
-          "resultFormat": "time_series",
-          "select": [
-            [
-              {
-                "params": [
-                  "user"
+                  "system"
                 ],
                 "type": "field"
               },
@@ -2113,7 +2219,154 @@
               }
             ]
           ],
-          "series": "cpu",
+          "tags": []
+        },
+        {
+          "alias": "CPU iowait",
+          "groupBy": [
+            {
+              "params": [
+                "$__interval"
+              ],
+              "type": "time"
+            },
+            {
+              "params": [
+                "null"
+              ],
+              "type": "fill"
+            }
+          ],
+          "measurement": "cpu",
+          "orderByTime": "ASC",
+          "policy": "default",
+          "refId": "C",
+          "resultFormat": "time_series",
+          "select": [
+            [
+              {
+                "params": [
+                  "iowait"
+                ],
+                "type": "field"
+              },
+              {
+                "params": [],
+                "type": "mean"
+              }
+            ]
+          ],
+          "tags": []
+        },
+        {
+          "alias": "CPU nice",
+          "groupBy": [
+            {
+              "params": [
+                "$__interval"
+              ],
+              "type": "time"
+            },
+            {
+              "params": [
+                "null"
+              ],
+              "type": "fill"
+            }
+          ],
+          "measurement": "cpu",
+          "orderByTime": "ASC",
+          "policy": "default",
+          "refId": "D",
+          "resultFormat": "time_series",
+          "select": [
+            [
+              {
+                "params": [
+                  "nice"
+                ],
+                "type": "field"
+              },
+              {
+                "params": [],
+                "type": "mean"
+              }
+            ]
+          ],
+          "tags": []
+        },
+        {
+          "alias": "CPU irq",
+          "groupBy": [
+            {
+              "params": [
+                "$__interval"
+              ],
+              "type": "time"
+            },
+            {
+              "params": [
+                "null"
+              ],
+              "type": "fill"
+            }
+          ],
+          "measurement": "cpu",
+          "orderByTime": "ASC",
+          "policy": "default",
+          "refId": "E",
+          "resultFormat": "time_series",
+          "select": [
+            [
+              {
+                "params": [
+                  "irq"
+                ],
+                "type": "field"
+              },
+              {
+                "params": [],
+                "type": "mean"
+              }
+            ]
+          ],
+          "tags": []
+        },
+        {
+          "alias": "CPU softirq",
+          "groupBy": [
+            {
+              "params": [
+                "$__interval"
+              ],
+              "type": "time"
+            },
+            {
+              "params": [
+                "null"
+              ],
+              "type": "fill"
+            }
+          ],
+          "measurement": "cpu",
+          "orderByTime": "ASC",
+          "policy": "default",
+          "refId": "F",
+          "resultFormat": "time_series",
+          "select": [
+            [
+              {
+                "params": [
+                  "softirq"
+                ],
+                "type": "field"
+              },
+              {
+                "params": [],
+                "type": "mean"
+              }
+            ]
+          ],
           "tags": []
         }
       ],
@@ -2121,11 +2374,11 @@
       "timeFrom": null,
       "timeRegions": [],
       "timeShift": null,
-      "title": "CPU user",
+      "title": "CPU by usage",
       "tooltip": {
         "shared": true,
         "sort": 0,
-        "value_type": "cumulative"
+        "value_type": "individual"
       },
       "transparent": true,
       "type": "graph",
@@ -2139,13 +2392,15 @@
       "yaxes": [
         {
           "format": "percent",
+          "label": null,
           "logBase": 1,
           "max": "100",
-          "min": "0",
+          "min": null,
           "show": true
         },
         {
           "format": "short",
+          "label": null,
           "logBase": 1,
           "max": null,
           "min": null,
@@ -2167,847 +2422,15 @@
       "datasource": "${DS_INFLUXDB}",
       "editable": true,
       "error": false,
+      "fieldConfig": {
+        "defaults": {
+          "custom": {},
+          "links": []
+        },
+        "overrides": []
+      },
       "fill": 0,
-      "grid": {},
-      "gridPos": {
-        "h": 6,
-        "w": 12,
-        "x": 12,
-        "y": 35
-      },
-      "id": 36,
-      "legend": {
-        "avg": false,
-        "current": false,
-        "max": false,
-        "min": false,
-        "show": false,
-        "total": false,
-        "values": false
-      },
-      "lines": true,
-      "linewidth": 2,
-      "links": [],
-      "nullPointMode": "null",
-      "paceLength": 10,
-      "percentage": false,
-      "pointradius": 5,
-      "points": false,
-      "renderer": "flot",
-      "seriesOverrides": [
-        {
-          "alias": "max",
-          "color": "rgb(255, 0, 0)",
-          "fillBelowTo": "mean",
-          "lines": false
-        },
-        {
-          "alias": "mean",
-          "zindex": 1
-        },
-        {
-          "alias": "min",
-          "color": "#00ffff",
-          "lines": false
-        },
-        {
-          "alias": "mean_shade",
-          "color": "#00ffff",
-          "fillBelowTo": "min",
-          "hideTooltip": true,
-          "lines": false
-        }
-      ],
-      "spaceLength": 10,
-      "stack": false,
-      "steppedLine": false,
-      "targets": [
-        {
-          "alias": "mean",
-          "column": "system",
-          "dsType": "influxdb",
-          "function": "mean",
-          "groupBy": [
-            {
-              "params": [
-                "$__interval"
-              ],
-              "type": "time"
-            },
-            {
-              "params": [
-                "null"
-              ],
-              "type": "fill"
-            }
-          ],
-          "interval": "60s",
-          "measurement": "cpu",
-          "orderByTime": "ASC",
-          "policy": "default",
-          "query": "SELECT mean(\"system\") FROM \"localhost.cpu\" WHERE $timeFilter GROUP BY time($interval)",
-          "refId": "A",
-          "resultFormat": "time_series",
-          "select": [
-            [
-              {
-                "params": [
-                  "system"
-                ],
-                "type": "field"
-              },
-              {
-                "params": [],
-                "type": "mean"
-              }
-            ]
-          ],
-          "series": "cpu",
-          "tags": []
-        },
-        {
-          "alias": "min",
-          "column": "system",
-          "dsType": "influxdb",
-          "function": "min",
-          "groupBy": [
-            {
-              "params": [
-                "$__interval"
-              ],
-              "type": "time"
-            },
-            {
-              "params": [
-                "null"
-              ],
-              "type": "fill"
-            }
-          ],
-          "interval": "60s",
-          "measurement": "cpu",
-          "orderByTime": "ASC",
-          "policy": "default",
-          "query": "SELECT min(\"system\") FROM \"localhost.cpu\" WHERE $timeFilter GROUP BY time($interval)",
-          "refId": "B",
-          "resultFormat": "time_series",
-          "select": [
-            [
-              {
-                "params": [
-                  "system"
-                ],
-                "type": "field"
-              },
-              {
-                "params": [],
-                "type": "min"
-              }
-            ]
-          ],
-          "series": "cpu",
-          "tags": [],
-          "target": ""
-        },
-        {
-          "alias": "max",
-          "column": "system",
-          "dsType": "influxdb",
-          "function": "max",
-          "groupBy": [
-            {
-              "params": [
-                "$__interval"
-              ],
-              "type": "time"
-            },
-            {
-              "params": [
-                "null"
-              ],
-              "type": "fill"
-            }
-          ],
-          "interval": "60s",
-          "measurement": "cpu",
-          "orderByTime": "ASC",
-          "policy": "default",
-          "query": "SELECT max(\"system\") FROM \"localhost.cpu\" WHERE $timeFilter GROUP BY time($interval)",
-          "refId": "C",
-          "resultFormat": "time_series",
-          "select": [
-            [
-              {
-                "params": [
-                  "system"
-                ],
-                "type": "field"
-              },
-              {
-                "params": [],
-                "type": "max"
-              }
-            ]
-          ],
-          "series": "cpu",
-          "tags": [],
-          "target": ""
-        },
-        {
-          "alias": "mean_shade",
-          "column": "system",
-          "dsType": "influxdb",
-          "function": "mean",
-          "groupBy": [
-            {
-              "params": [
-                "$__interval"
-              ],
-              "type": "time"
-            },
-            {
-              "params": [
-                "null"
-              ],
-              "type": "fill"
-            }
-          ],
-          "interval": "60s",
-          "measurement": "cpu",
-          "orderByTime": "ASC",
-          "policy": "default",
-          "query": "SELECT mean(\"system\") FROM \"localhost.cpu\" WHERE $timeFilter GROUP BY time($interval)",
-          "refId": "D",
-          "resultFormat": "time_series",
-          "select": [
-            [
-              {
-                "params": [
-                  "system"
-                ],
-                "type": "field"
-              },
-              {
-                "params": [],
-                "type": "mean"
-              }
-            ]
-          ],
-          "series": "cpu",
-          "tags": []
-        }
-      ],
-      "thresholds": [],
-      "timeFrom": null,
-      "timeRegions": [],
-      "timeShift": null,
-      "title": "CPU system",
-      "tooltip": {
-        "shared": true,
-        "sort": 0,
-        "value_type": "cumulative"
-      },
-      "transparent": true,
-      "type": "graph",
-      "xaxis": {
-        "buckets": null,
-        "mode": "time",
-        "name": null,
-        "show": true,
-        "values": []
-      },
-      "yaxes": [
-        {
-          "format": "percent",
-          "logBase": 1,
-          "max": "100",
-          "min": "0",
-          "show": true
-        },
-        {
-          "format": "short",
-          "logBase": 1,
-          "max": null,
-          "min": null,
-          "show": false
-        }
-      ],
-      "yaxis": {
-        "align": false,
-        "alignLevel": null
-      }
-    },
-    {
-      "aliasColors": {
-        "max": "#890F02"
-      },
-      "bars": false,
-      "dashLength": 10,
-      "dashes": false,
-      "datasource": "${DS_INFLUXDB}",
-      "editable": true,
-      "error": false,
-      "fill": 0,
-      "grid": {},
-      "gridPos": {
-        "h": 6,
-        "w": 12,
-        "x": 0,
-        "y": 41
-      },
-      "id": 37,
-      "legend": {
-        "avg": false,
-        "current": false,
-        "max": false,
-        "min": false,
-        "show": false,
-        "total": false,
-        "values": false
-      },
-      "lines": true,
-      "linewidth": 2,
-      "links": [],
-      "nullPointMode": "null",
-      "paceLength": 10,
-      "percentage": false,
-      "pointradius": 5,
-      "points": false,
-      "renderer": "flot",
-      "seriesOverrides": [
-        {
-          "alias": "max",
-          "color": "rgb(255, 0, 0)",
-          "fillBelowTo": "mean",
-          "lines": false
-        },
-        {
-          "alias": "mean",
-          "zindex": 1
-        },
-        {
-          "alias": "min",
-          "color": "#00ffff",
-          "lines": false
-        },
-        {
-          "alias": "mean_shade",
-          "color": "#00ffff",
-          "fillBelowTo": "min",
-          "hideTooltip": true,
-          "lines": false
-        }
-      ],
-      "spaceLength": 10,
-      "stack": false,
-      "steppedLine": false,
-      "targets": [
-        {
-          "alias": "mean",
-          "column": "system",
-          "dsType": "influxdb",
-          "function": "mean",
-          "groupBy": [
-            {
-              "params": [
-                "$__interval"
-              ],
-              "type": "time"
-            },
-            {
-              "params": [
-                "null"
-              ],
-              "type": "fill"
-            }
-          ],
-          "interval": "60s",
-          "measurement": "cpu",
-          "orderByTime": "ASC",
-          "policy": "default",
-          "query": "SELECT mean(\"system\") FROM \"localhost.cpu\" WHERE $timeFilter GROUP BY time($interval)",
-          "refId": "A",
-          "resultFormat": "time_series",
-          "select": [
-            [
-              {
-                "params": [
-                  "iowait"
-                ],
-                "type": "field"
-              },
-              {
-                "params": [],
-                "type": "mean"
-              }
-            ]
-          ],
-          "series": "cpu",
-          "tags": []
-        },
-        {
-          "alias": "min",
-          "column": "system",
-          "dsType": "influxdb",
-          "function": "min",
-          "groupBy": [
-            {
-              "params": [
-                "$__interval"
-              ],
-              "type": "time"
-            },
-            {
-              "params": [
-                "null"
-              ],
-              "type": "fill"
-            }
-          ],
-          "interval": "60s",
-          "measurement": "cpu",
-          "orderByTime": "ASC",
-          "policy": "default",
-          "query": "SELECT min(\"system\") FROM \"localhost.cpu\" WHERE $timeFilter GROUP BY time($interval)",
-          "refId": "B",
-          "resultFormat": "time_series",
-          "select": [
-            [
-              {
-                "params": [
-                  "iowait"
-                ],
-                "type": "field"
-              },
-              {
-                "params": [],
-                "type": "min"
-              }
-            ]
-          ],
-          "series": "cpu",
-          "tags": [],
-          "target": ""
-        },
-        {
-          "alias": "max",
-          "column": "system",
-          "dsType": "influxdb",
-          "function": "max",
-          "groupBy": [
-            {
-              "params": [
-                "$__interval"
-              ],
-              "type": "time"
-            },
-            {
-              "params": [
-                "null"
-              ],
-              "type": "fill"
-            }
-          ],
-          "interval": "60s",
-          "measurement": "cpu",
-          "orderByTime": "ASC",
-          "policy": "default",
-          "query": "SELECT max(\"system\") FROM \"localhost.cpu\" WHERE $timeFilter GROUP BY time($interval)",
-          "refId": "C",
-          "resultFormat": "time_series",
-          "select": [
-            [
-              {
-                "params": [
-                  "iowait"
-                ],
-                "type": "field"
-              },
-              {
-                "params": [],
-                "type": "max"
-              }
-            ]
-          ],
-          "series": "cpu",
-          "tags": [],
-          "target": ""
-        },
-        {
-          "alias": "mean_shade",
-          "column": "system",
-          "dsType": "influxdb",
-          "function": "mean",
-          "groupBy": [
-            {
-              "params": [
-                "$__interval"
-              ],
-              "type": "time"
-            },
-            {
-              "params": [
-                "null"
-              ],
-              "type": "fill"
-            }
-          ],
-          "interval": "60s",
-          "measurement": "cpu",
-          "orderByTime": "ASC",
-          "policy": "default",
-          "query": "SELECT mean(\"system\") FROM \"localhost.cpu\" WHERE $timeFilter GROUP BY time($interval)",
-          "refId": "D",
-          "resultFormat": "time_series",
-          "select": [
-            [
-              {
-                "params": [
-                  "iowait"
-                ],
-                "type": "field"
-              },
-              {
-                "params": [],
-                "type": "mean"
-              }
-            ]
-          ],
-          "series": "cpu",
-          "tags": []
-        }
-      ],
-      "thresholds": [],
-      "timeFrom": null,
-      "timeRegions": [],
-      "timeShift": null,
-      "title": "CPU iowait",
-      "tooltip": {
-        "shared": true,
-        "sort": 0,
-        "value_type": "cumulative"
-      },
-      "transparent": true,
-      "type": "graph",
-      "xaxis": {
-        "buckets": null,
-        "mode": "time",
-        "name": null,
-        "show": true,
-        "values": []
-      },
-      "yaxes": [
-        {
-          "format": "percent",
-          "logBase": 1,
-          "max": "100",
-          "min": "0",
-          "show": true
-        },
-        {
-          "format": "short",
-          "logBase": 1,
-          "max": null,
-          "min": null,
-          "show": false
-        }
-      ],
-      "yaxis": {
-        "align": false,
-        "alignLevel": null
-      }
-    },
-    {
-      "aliasColors": {
-        "max": "#890F02"
-      },
-      "bars": false,
-      "dashLength": 10,
-      "dashes": false,
-      "datasource": "${DS_INFLUXDB}",
-      "editable": true,
-      "error": false,
-      "fill": 0,
-      "grid": {},
-      "gridPos": {
-        "h": 6,
-        "w": 12,
-        "x": 12,
-        "y": 41
-      },
-      "id": 40,
-      "legend": {
-        "avg": false,
-        "current": false,
-        "max": false,
-        "min": false,
-        "show": false,
-        "total": false,
-        "values": false
-      },
-      "lines": true,
-      "linewidth": 2,
-      "links": [],
-      "nullPointMode": "null",
-      "paceLength": 10,
-      "percentage": false,
-      "pointradius": 5,
-      "points": false,
-      "renderer": "flot",
-      "seriesOverrides": [
-        {
-          "alias": "max",
-          "color": "rgb(255, 0, 0)",
-          "fillBelowTo": "mean",
-          "lines": false
-        },
-        {
-          "alias": "mean",
-          "zindex": 1
-        },
-        {
-          "alias": "min",
-          "color": "#00ffff",
-          "lines": false
-        },
-        {
-          "alias": "mean_shade",
-          "color": "#00ffff",
-          "fillBelowTo": "min",
-          "hideTooltip": true,
-          "lines": false
-        }
-      ],
-      "spaceLength": 10,
-      "stack": false,
-      "steppedLine": false,
-      "targets": [
-        {
-          "alias": "mean",
-          "column": "system",
-          "dsType": "influxdb",
-          "function": "mean",
-          "groupBy": [
-            {
-              "params": [
-                "$__interval"
-              ],
-              "type": "time"
-            },
-            {
-              "params": [
-                "null"
-              ],
-              "type": "fill"
-            }
-          ],
-          "interval": "60s",
-          "measurement": "cpu",
-          "orderByTime": "ASC",
-          "policy": "default",
-          "query": "SELECT mean(\"system\") FROM \"localhost.cpu\" WHERE $timeFilter GROUP BY time($interval)",
-          "refId": "A",
-          "resultFormat": "time_series",
-          "select": [
-            [
-              {
-                "params": [
-                  "nice"
-                ],
-                "type": "field"
-              },
-              {
-                "params": [],
-                "type": "mean"
-              }
-            ]
-          ],
-          "series": "cpu",
-          "tags": []
-        },
-        {
-          "alias": "min",
-          "column": "system",
-          "dsType": "influxdb",
-          "function": "min",
-          "groupBy": [
-            {
-              "params": [
-                "$__interval"
-              ],
-              "type": "time"
-            },
-            {
-              "params": [
-                "null"
-              ],
-              "type": "fill"
-            }
-          ],
-          "interval": "60s",
-          "measurement": "cpu",
-          "orderByTime": "ASC",
-          "policy": "default",
-          "query": "SELECT min(\"system\") FROM \"localhost.cpu\" WHERE $timeFilter GROUP BY time($interval)",
-          "refId": "B",
-          "resultFormat": "time_series",
-          "select": [
-            [
-              {
-                "params": [
-                  "nice"
-                ],
-                "type": "field"
-              },
-              {
-                "params": [],
-                "type": "min"
-              }
-            ]
-          ],
-          "series": "cpu",
-          "tags": [],
-          "target": ""
-        },
-        {
-          "alias": "max",
-          "column": "system",
-          "dsType": "influxdb",
-          "function": "max",
-          "groupBy": [
-            {
-              "params": [
-                "$__interval"
-              ],
-              "type": "time"
-            },
-            {
-              "params": [
-                "null"
-              ],
-              "type": "fill"
-            }
-          ],
-          "interval": "60s",
-          "measurement": "cpu",
-          "orderByTime": "ASC",
-          "policy": "default",
-          "query": "SELECT max(\"system\") FROM \"localhost.cpu\" WHERE $timeFilter GROUP BY time($interval)",
-          "refId": "C",
-          "resultFormat": "time_series",
-          "select": [
-            [
-              {
-                "params": [
-                  "nice"
-                ],
-                "type": "field"
-              },
-              {
-                "params": [],
-                "type": "max"
-              }
-            ]
-          ],
-          "series": "cpu",
-          "tags": [],
-          "target": ""
-        },
-        {
-          "alias": "mean_shade",
-          "column": "system",
-          "dsType": "influxdb",
-          "function": "mean",
-          "groupBy": [
-            {
-              "params": [
-                "$__interval"
-              ],
-              "type": "time"
-            },
-            {
-              "params": [
-                "null"
-              ],
-              "type": "fill"
-            }
-          ],
-          "interval": "60s",
-          "measurement": "cpu",
-          "orderByTime": "ASC",
-          "policy": "default",
-          "query": "SELECT mean(\"system\") FROM \"localhost.cpu\" WHERE $timeFilter GROUP BY time($interval)",
-          "refId": "D",
-          "resultFormat": "time_series",
-          "select": [
-            [
-              {
-                "params": [
-                  "nice"
-                ],
-                "type": "field"
-              },
-              {
-                "params": [],
-                "type": "mean"
-              }
-            ]
-          ],
-          "series": "cpu",
-          "tags": []
-        }
-      ],
-      "thresholds": [],
-      "timeFrom": null,
-      "timeRegions": [],
-      "timeShift": null,
-      "title": "CPU nice",
-      "tooltip": {
-        "shared": true,
-        "sort": 0,
-        "value_type": "cumulative"
-      },
-      "transparent": true,
-      "type": "graph",
-      "xaxis": {
-        "buckets": null,
-        "mode": "time",
-        "name": null,
-        "show": true,
-        "values": []
-      },
-      "yaxes": [
-        {
-          "format": "percent",
-          "logBase": 1,
-          "max": "100",
-          "min": "0",
-          "show": true
-        },
-        {
-          "format": "short",
-          "logBase": 1,
-          "max": null,
-          "min": null,
-          "show": false
-        }
-      ],
-      "yaxis": {
-        "align": false,
-        "alignLevel": null
-      }
-    },
-    {
-      "aliasColors": {
-        "max": "#890F02"
-      },
-      "bars": false,
-      "dashLength": 10,
-      "dashes": false,
-      "datasource": "${DS_INFLUXDB}",
-      "editable": true,
-      "error": false,
-      "fill": 0,
+      "fillGradient": 0,
       "grid": {},
       "gridPos": {
         "h": 6,
@@ -3015,566 +2438,7 @@
         "x": 0,
         "y": 47
       },
-      "id": 38,
-      "legend": {
-        "avg": false,
-        "current": false,
-        "max": false,
-        "min": false,
-        "show": false,
-        "total": false,
-        "values": false
-      },
-      "lines": true,
-      "linewidth": 2,
-      "links": [],
-      "nullPointMode": "null",
-      "paceLength": 10,
-      "percentage": false,
-      "pointradius": 5,
-      "points": false,
-      "renderer": "flot",
-      "seriesOverrides": [
-        {
-          "alias": "max",
-          "color": "rgb(255, 0, 0)",
-          "fillBelowTo": "mean",
-          "lines": false
-        },
-        {
-          "alias": "mean",
-          "zindex": 1
-        },
-        {
-          "alias": "min",
-          "color": "#00ffff",
-          "lines": false
-        },
-        {
-          "alias": "mean_shade",
-          "color": "#00ffff",
-          "fillBelowTo": "min",
-          "hideTooltip": true,
-          "lines": false
-        }
-      ],
-      "spaceLength": 10,
-      "stack": false,
-      "steppedLine": false,
-      "targets": [
-        {
-          "alias": "mean",
-          "column": "system",
-          "dsType": "influxdb",
-          "function": "mean",
-          "groupBy": [
-            {
-              "params": [
-                "$__interval"
-              ],
-              "type": "time"
-            },
-            {
-              "params": [
-                "null"
-              ],
-              "type": "fill"
-            }
-          ],
-          "interval": "60s",
-          "measurement": "cpu",
-          "orderByTime": "ASC",
-          "policy": "default",
-          "query": "SELECT mean(\"system\") FROM \"localhost.cpu\" WHERE $timeFilter GROUP BY time($interval)",
-          "refId": "A",
-          "resultFormat": "time_series",
-          "select": [
-            [
-              {
-                "params": [
-                  "irq"
-                ],
-                "type": "field"
-              },
-              {
-                "params": [],
-                "type": "mean"
-              }
-            ]
-          ],
-          "series": "cpu",
-          "tags": []
-        },
-        {
-          "alias": "min",
-          "column": "system",
-          "dsType": "influxdb",
-          "function": "min",
-          "groupBy": [
-            {
-              "params": [
-                "$__interval"
-              ],
-              "type": "time"
-            },
-            {
-              "params": [
-                "null"
-              ],
-              "type": "fill"
-            }
-          ],
-          "interval": "60s",
-          "measurement": "cpu",
-          "orderByTime": "ASC",
-          "policy": "default",
-          "query": "SELECT min(\"system\") FROM \"localhost.cpu\" WHERE $timeFilter GROUP BY time($interval)",
-          "refId": "B",
-          "resultFormat": "time_series",
-          "select": [
-            [
-              {
-                "params": [
-                  "irq"
-                ],
-                "type": "field"
-              },
-              {
-                "params": [],
-                "type": "min"
-              }
-            ]
-          ],
-          "series": "cpu",
-          "tags": [],
-          "target": ""
-        },
-        {
-          "alias": "max",
-          "column": "system",
-          "dsType": "influxdb",
-          "function": "max",
-          "groupBy": [
-            {
-              "params": [
-                "$__interval"
-              ],
-              "type": "time"
-            },
-            {
-              "params": [
-                "null"
-              ],
-              "type": "fill"
-            }
-          ],
-          "interval": "60s",
-          "measurement": "cpu",
-          "orderByTime": "ASC",
-          "policy": "default",
-          "query": "SELECT max(\"system\") FROM \"localhost.cpu\" WHERE $timeFilter GROUP BY time($interval)",
-          "refId": "C",
-          "resultFormat": "time_series",
-          "select": [
-            [
-              {
-                "params": [
-                  "irq"
-                ],
-                "type": "field"
-              },
-              {
-                "params": [],
-                "type": "max"
-              }
-            ]
-          ],
-          "series": "cpu",
-          "tags": [],
-          "target": ""
-        },
-        {
-          "alias": "mean_shade",
-          "column": "system",
-          "dsType": "influxdb",
-          "function": "mean",
-          "groupBy": [
-            {
-              "params": [
-                "$__interval"
-              ],
-              "type": "time"
-            },
-            {
-              "params": [
-                "null"
-              ],
-              "type": "fill"
-            }
-          ],
-          "interval": "60s",
-          "measurement": "cpu",
-          "orderByTime": "ASC",
-          "policy": "default",
-          "query": "SELECT mean(\"system\") FROM \"localhost.cpu\" WHERE $timeFilter GROUP BY time($interval)",
-          "refId": "D",
-          "resultFormat": "time_series",
-          "select": [
-            [
-              {
-                "params": [
-                  "irq"
-                ],
-                "type": "field"
-              },
-              {
-                "params": [],
-                "type": "mean"
-              }
-            ]
-          ],
-          "series": "cpu",
-          "tags": []
-        }
-      ],
-      "thresholds": [],
-      "timeFrom": null,
-      "timeRegions": [],
-      "timeShift": null,
-      "title": "CPU irq",
-      "tooltip": {
-        "shared": true,
-        "sort": 0,
-        "value_type": "cumulative"
-      },
-      "transparent": true,
-      "type": "graph",
-      "xaxis": {
-        "buckets": null,
-        "mode": "time",
-        "name": null,
-        "show": true,
-        "values": []
-      },
-      "yaxes": [
-        {
-          "format": "percent",
-          "logBase": 1,
-          "max": "100",
-          "min": "0",
-          "show": true
-        },
-        {
-          "format": "short",
-          "logBase": 1,
-          "max": null,
-          "min": null,
-          "show": false
-        }
-      ],
-      "yaxis": {
-        "align": false,
-        "alignLevel": null
-      }
-    },
-    {
-      "aliasColors": {
-        "max": "#890F02"
-      },
-      "bars": false,
-      "dashLength": 10,
-      "dashes": false,
-      "datasource": "${DS_INFLUXDB}",
-      "editable": true,
-      "error": false,
-      "fill": 0,
-      "grid": {},
-      "gridPos": {
-        "h": 6,
-        "w": 12,
-        "x": 12,
-        "y": 47
-      },
-      "id": 39,
-      "legend": {
-        "avg": false,
-        "current": false,
-        "max": false,
-        "min": false,
-        "show": false,
-        "total": false,
-        "values": false
-      },
-      "lines": true,
-      "linewidth": 2,
-      "links": [],
-      "nullPointMode": "null",
-      "paceLength": 10,
-      "percentage": false,
-      "pointradius": 5,
-      "points": false,
-      "renderer": "flot",
-      "seriesOverrides": [
-        {
-          "alias": "max",
-          "color": "rgb(255, 0, 0)",
-          "fillBelowTo": "mean",
-          "lines": false
-        },
-        {
-          "alias": "mean",
-          "zindex": 1
-        },
-        {
-          "alias": "min",
-          "color": "#00ffff",
-          "lines": false
-        },
-        {
-          "alias": "mean_shade",
-          "color": "#00ffff",
-          "fillBelowTo": "min",
-          "hideTooltip": true,
-          "lines": false
-        }
-      ],
-      "spaceLength": 10,
-      "stack": false,
-      "steppedLine": false,
-      "targets": [
-        {
-          "alias": "mean",
-          "column": "system",
-          "dsType": "influxdb",
-          "function": "mean",
-          "groupBy": [
-            {
-              "params": [
-                "$__interval"
-              ],
-              "type": "time"
-            },
-            {
-              "params": [
-                "null"
-              ],
-              "type": "fill"
-            }
-          ],
-          "interval": "60s",
-          "measurement": "cpu",
-          "orderByTime": "ASC",
-          "policy": "default",
-          "query": "SELECT mean(\"system\") FROM \"localhost.cpu\" WHERE $timeFilter GROUP BY time($interval)",
-          "refId": "A",
-          "resultFormat": "time_series",
-          "select": [
-            [
-              {
-                "params": [
-                  "softirq"
-                ],
-                "type": "field"
-              },
-              {
-                "params": [],
-                "type": "mean"
-              }
-            ]
-          ],
-          "series": "cpu",
-          "tags": []
-        },
-        {
-          "alias": "min",
-          "column": "system",
-          "dsType": "influxdb",
-          "function": "min",
-          "groupBy": [
-            {
-              "params": [
-                "$__interval"
-              ],
-              "type": "time"
-            },
-            {
-              "params": [
-                "null"
-              ],
-              "type": "fill"
-            }
-          ],
-          "interval": "60s",
-          "measurement": "cpu",
-          "orderByTime": "ASC",
-          "policy": "default",
-          "query": "SELECT min(\"system\") FROM \"localhost.cpu\" WHERE $timeFilter GROUP BY time($interval)",
-          "refId": "B",
-          "resultFormat": "time_series",
-          "select": [
-            [
-              {
-                "params": [
-                  "softirq"
-                ],
-                "type": "field"
-              },
-              {
-                "params": [],
-                "type": "min"
-              }
-            ]
-          ],
-          "series": "cpu",
-          "tags": [],
-          "target": ""
-        },
-        {
-          "alias": "max",
-          "column": "system",
-          "dsType": "influxdb",
-          "function": "max",
-          "groupBy": [
-            {
-              "params": [
-                "$__interval"
-              ],
-              "type": "time"
-            },
-            {
-              "params": [
-                "null"
-              ],
-              "type": "fill"
-            }
-          ],
-          "interval": "60s",
-          "measurement": "cpu",
-          "orderByTime": "ASC",
-          "policy": "default",
-          "query": "SELECT max(\"system\") FROM \"localhost.cpu\" WHERE $timeFilter GROUP BY time($interval)",
-          "refId": "C",
-          "resultFormat": "time_series",
-          "select": [
-            [
-              {
-                "params": [
-                  "softirq"
-                ],
-                "type": "field"
-              },
-              {
-                "params": [],
-                "type": "max"
-              }
-            ]
-          ],
-          "series": "cpu",
-          "tags": [],
-          "target": ""
-        },
-        {
-          "alias": "mean_shade",
-          "column": "system",
-          "dsType": "influxdb",
-          "function": "mean",
-          "groupBy": [
-            {
-              "params": [
-                "$__interval"
-              ],
-              "type": "time"
-            },
-            {
-              "params": [
-                "null"
-              ],
-              "type": "fill"
-            }
-          ],
-          "interval": "60s",
-          "measurement": "cpu",
-          "orderByTime": "ASC",
-          "policy": "default",
-          "query": "SELECT mean(\"system\") FROM \"localhost.cpu\" WHERE $timeFilter GROUP BY time($interval)",
-          "refId": "D",
-          "resultFormat": "time_series",
-          "select": [
-            [
-              {
-                "params": [
-                  "softirq"
-                ],
-                "type": "field"
-              },
-              {
-                "params": [],
-                "type": "mean"
-              }
-            ]
-          ],
-          "series": "cpu",
-          "tags": []
-        }
-      ],
-      "thresholds": [],
-      "timeFrom": null,
-      "timeRegions": [],
-      "timeShift": null,
-      "title": "CPU softirq",
-      "tooltip": {
-        "shared": true,
-        "sort": 0,
-        "value_type": "cumulative"
-      },
-      "transparent": true,
-      "type": "graph",
-      "xaxis": {
-        "buckets": null,
-        "mode": "time",
-        "name": null,
-        "show": true,
-        "values": []
-      },
-      "yaxes": [
-        {
-          "format": "percent",
-          "logBase": 1,
-          "max": "100",
-          "min": "0",
-          "show": true
-        },
-        {
-          "format": "short",
-          "logBase": 1,
-          "max": null,
-          "min": null,
-          "show": false
-        }
-      ],
-      "yaxis": {
-        "align": false,
-        "alignLevel": null
-      }
-    },
-    {
-      "aliasColors": {
-        "max": "#890F02"
-      },
-      "bars": false,
-      "dashLength": 10,
-      "dashes": false,
-      "datasource": "${DS_INFLUXDB}",
-      "editable": true,
-      "error": false,
-      "fill": 0,
-      "grid": {},
-      "gridPos": {
-        "h": 6,
-        "w": 12,
-        "x": 0,
-        "y": 53
-      },
+      "hiddenSeries": false,
       "id": 19,
       "legend": {
         "alignAsTable": false,
@@ -3593,6 +2457,7 @@
       "nullPointMode": "null",
       "paceLength": 10,
       "percentage": false,
+      "pluginVersion": "7.1.4",
       "pointradius": 5,
       "points": false,
       "renderer": "flot",
@@ -3648,7 +2513,7 @@
           "measurement": "cpu",
           "orderByTime": "ASC",
           "policy": "default",
-          "query": "SELECT mean(\"ctx_switches\") / mean(\"time_since_update\") FROM \"localhost.cpu\" WHERE $timeFilter GROUP BY time($interval)",
+          "query": "",
           "rawQuery": false,
           "refId": "A",
           "resultFormat": "time_series",
@@ -3693,7 +2558,7 @@
           "measurement": "cpu",
           "orderByTime": "ASC",
           "policy": "default",
-          "query": "SELECT mean(\"ctx_switches\") / mean(\"time_since_update\") FROM \"localhost.cpu\" WHERE $timeFilter GROUP BY time($interval)",
+          "query": "",
           "rawQuery": false,
           "refId": "B",
           "resultFormat": "time_series",
@@ -3738,7 +2603,7 @@
           "measurement": "cpu",
           "orderByTime": "ASC",
           "policy": "default",
-          "query": "SELECT mean(\"ctx_switches\") / mean(\"time_since_update\") FROM \"localhost.cpu\" WHERE $timeFilter GROUP BY time($interval)",
+          "query": "",
           "rawQuery": false,
           "refId": "C",
           "resultFormat": "time_series",
@@ -3783,7 +2648,7 @@
           "measurement": "cpu",
           "orderByTime": "ASC",
           "policy": "default",
-          "query": "SELECT mean(\"ctx_switches\") / mean(\"time_since_update\") FROM \"localhost.cpu\" WHERE $timeFilter GROUP BY time($interval)",
+          "query": "",
           "rawQuery": false,
           "refId": "D",
           "resultFormat": "time_series",
@@ -3855,14 +2720,23 @@
       "datasource": "${DS_INFLUXDB}",
       "editable": true,
       "error": false,
+      "fieldConfig": {
+        "defaults": {
+          "custom": {},
+          "links": []
+        },
+        "overrides": []
+      },
       "fill": 0,
+      "fillGradient": 0,
       "grid": {},
       "gridPos": {
         "h": 6,
         "w": 12,
         "x": 12,
-        "y": 53
+        "y": 47
       },
+      "hiddenSeries": false,
       "id": 41,
       "legend": {
         "alignAsTable": false,
@@ -3881,6 +2755,7 @@
       "nullPointMode": "null",
       "paceLength": 10,
       "percentage": false,
+      "pluginVersion": "7.1.4",
       "pointradius": 5,
       "points": false,
       "renderer": "flot",
@@ -3936,7 +2811,7 @@
           "measurement": "cpu",
           "orderByTime": "ASC",
           "policy": "default",
-          "query": "SELECT mean(\"ctx_switches\") / mean(\"time_since_update\") FROM \"localhost.cpu\" WHERE $timeFilter GROUP BY time($interval)",
+          "query": "",
           "rawQuery": false,
           "refId": "A",
           "resultFormat": "time_series",
@@ -3981,7 +2856,7 @@
           "measurement": "cpu",
           "orderByTime": "ASC",
           "policy": "default",
-          "query": "SELECT mean(\"ctx_switches\") / mean(\"time_since_update\") FROM \"localhost.cpu\" WHERE $timeFilter GROUP BY time($interval)",
+          "query": "",
           "rawQuery": false,
           "refId": "B",
           "resultFormat": "time_series",
@@ -4026,7 +2901,7 @@
           "measurement": "cpu",
           "orderByTime": "ASC",
           "policy": "default",
-          "query": "SELECT mean(\"ctx_switches\") / mean(\"time_since_update\") FROM \"localhost.cpu\" WHERE $timeFilter GROUP BY time($interval)",
+          "query": "",
           "rawQuery": false,
           "refId": "C",
           "resultFormat": "time_series",
@@ -4071,7 +2946,7 @@
           "measurement": "cpu",
           "orderByTime": "ASC",
           "policy": "default",
-          "query": "SELECT mean(\"ctx_switches\") / mean(\"time_since_update\") FROM \"localhost.cpu\" WHERE $timeFilter GROUP BY time($interval)",
+          "query": "",
           "rawQuery": false,
           "refId": "D",
           "resultFormat": "time_series",
@@ -4135,15 +3010,27 @@
     },
     {
       "content": "# title",
+      "datasource": "${DS_INFLUXDB}",
+      "fieldConfig": {
+        "defaults": {
+          "custom": {}
+        },
+        "overrides": []
+      },
       "gridPos": {
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 59
+        "y": 53
       },
       "id": 30,
       "links": [],
       "mode": "markdown",
+      "options": {
+        "content": "# title",
+        "mode": "markdown"
+      },
+      "pluginVersion": "7.1.0",
       "title": "Sensors",
       "type": "text"
     },
@@ -4153,13 +3040,22 @@
       "dashLength": 10,
       "dashes": false,
       "datasource": "${DS_INFLUXDB}",
+      "fieldConfig": {
+        "defaults": {
+          "custom": {},
+          "links": []
+        },
+        "overrides": []
+      },
       "fill": 0,
+      "fillGradient": 0,
       "gridPos": {
         "h": 6,
         "w": 12,
         "x": 0,
-        "y": 60
+        "y": 54
       },
+      "hiddenSeries": false,
       "id": 28,
       "legend": {
         "avg": false,
@@ -4176,6 +3072,7 @@
       "nullPointMode": "null",
       "paceLength": 10,
       "percentage": false,
+      "pluginVersion": "7.1.4",
       "pointradius": 5,
       "points": false,
       "renderer": "flot",
@@ -4272,13 +3169,22 @@
       "dashes": false,
       "datasource": "${DS_INFLUXDB}",
       "decimals": 2,
+      "fieldConfig": {
+        "defaults": {
+          "custom": {},
+          "links": []
+        },
+        "overrides": []
+      },
       "fill": 0,
+      "fillGradient": 0,
       "gridPos": {
         "h": 6,
         "w": 12,
         "x": 12,
-        "y": 60
+        "y": 54
       },
+      "hiddenSeries": false,
       "id": 42,
       "legend": {
         "avg": true,
@@ -4295,6 +3201,7 @@
       "nullPointMode": "null",
       "paceLength": 10,
       "percentage": false,
+      "pluginVersion": "7.1.4",
       "pointradius": 5,
       "points": false,
       "renderer": "flot",
@@ -4304,13 +3211,19 @@
       "steppedLine": false,
       "targets": [
         {
-          "alias": "$col",
+          "alias": "CPU$tag_cpu",
           "groupBy": [
             {
               "params": [
                 "$__interval"
               ],
               "type": "time"
+            },
+            {
+              "params": [
+                "cpu"
+              ],
+              "type": "tag"
             },
             {
               "params": [
@@ -4322,31 +3235,31 @@
           "measurement": "cpu",
           "orderByTime": "ASC",
           "policy": "default",
-          "query": "SELECT mean(/cpu\\d+_freq/) FROM \"cpu\" WHERE $timeFilter GROUP BY time($__interval) fill(null)",
-          "rawQuery": true,
+          "query": "",
+          "rawQuery": false,
           "refId": "A",
           "resultFormat": "time_series",
           "select": [
             [
               {
                 "params": [
-                  "frequency"
+                  "freq"
                 ],
                 "type": "field"
               },
               {
                 "params": [],
                 "type": "mean"
-              },
-              {
-                "params": [
-                  "*1000000"
-                ],
-                "type": "math"
               }
             ]
           ],
-          "tags": []
+          "tags": [
+            {
+              "key": "cpu",
+              "operator": "=~",
+              "value": "/.*/"
+            }
+          ]
         }
       ],
       "thresholds": [],
@@ -4397,13 +3310,23 @@
       "bars": false,
       "dashLength": 10,
       "dashes": false,
+      "datasource": "${DS_INFLUXDB}",
+      "fieldConfig": {
+        "defaults": {
+          "custom": {},
+          "links": []
+        },
+        "overrides": []
+      },
       "fill": 1,
+      "fillGradient": 0,
       "gridPos": {
         "h": 6,
         "w": 12,
         "x": 0,
-        "y": 66
+        "y": 60
       },
+      "hiddenSeries": false,
       "id": 48,
       "legend": {
         "avg": false,
@@ -4419,6 +3342,7 @@
       "links": [],
       "nullPointMode": "null",
       "percentage": false,
+      "pluginVersion": "7.1.4",
       "pointradius": 2,
       "points": false,
       "renderer": "flot",
@@ -4566,13 +3490,23 @@
       "bars": false,
       "dashLength": 10,
       "dashes": false,
+      "datasource": "${DS_INFLUXDB}",
+      "fieldConfig": {
+        "defaults": {
+          "custom": {},
+          "links": []
+        },
+        "overrides": []
+      },
       "fill": 0,
+      "fillGradient": 0,
       "gridPos": {
         "h": 6,
         "w": 12,
         "x": 12,
-        "y": 66
+        "y": 60
       },
+      "hiddenSeries": false,
       "id": 49,
       "legend": {
         "avg": false,
@@ -4588,6 +3522,7 @@
       "links": [],
       "nullPointMode": "null",
       "percentage": false,
+      "pluginVersion": "7.1.4",
       "pointradius": 2,
       "points": false,
       "renderer": "flot",
@@ -4820,13 +3755,23 @@
       "bars": false,
       "dashLength": 10,
       "dashes": false,
+      "datasource": "${DS_INFLUXDB}",
+      "fieldConfig": {
+        "defaults": {
+          "custom": {},
+          "links": []
+        },
+        "overrides": []
+      },
       "fill": 0,
+      "fillGradient": 0,
       "gridPos": {
         "h": 6,
         "w": 24,
         "x": 0,
-        "y": 72
+        "y": 66
       },
+      "hiddenSeries": false,
       "id": 47,
       "legend": {
         "avg": false,
@@ -4842,6 +3787,7 @@
       "links": [],
       "nullPointMode": "null",
       "percentage": false,
+      "pluginVersion": "7.1.4",
       "pointradius": 2,
       "points": false,
       "renderer": "flot",
@@ -4981,7 +3927,7 @@
     }
   ],
   "refresh": "30s",
-  "schemaVersion": 18,
+  "schemaVersion": 26,
   "style": "dark",
   "tags": [],
   "templating": {
@@ -5025,5 +3971,5 @@
   "timezone": "browser",
   "title": "System metrics",
   "uid": "wRgzuFqiz",
-  "version": 10
+  "version": 11
 }

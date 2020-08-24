@@ -1,0 +1,63 @@
+# run system_metrics_influx.py --help for more info
+# only settings changed from default need to be specified
+# all settings are here as their defaults
+
+# username for influxdb, default is root
+username: root
+
+# password for influxdb, default is root
+password: root
+
+# host for influxdb, default is localhost
+host: localhost
+
+# port for influxdb, default is 8086
+port: 8086
+
+# name of the influxdb database, default is system_stats
+database: system_stats
+
+# physical disks to include and exclude from monitoring for disk IO
+# default is exclude loopback devices
+# the regex "[p]?\\d+" specifies partitions
+# include-disks: ["sda", "sda[p]?\\d+"] # includes just sda and each partition
+# include-disks: ["sdb"] # include just sdb with no partition specific info
+# include-disks: ["sd\\w", "sd\\w[p]?\\d+"] # includes all sdx drives and each partition on each sdx drive
+# exclude-disks: ["sdc[p]?\\d+"] # excludes partitions on sdc but does not exclude the drive itself
+include-disks: []
+exclude-disks: ["loop\\d+"] # excludes disk loopback devices
+
+# mountpoints to include and exclude from monitoring for disk storage space
+# default is exclude none (ie include all)
+include-mountpoints: []
+exclude-mountpoints: []
+
+# how often the stats are collected and saved, default is 1s. must be an integer
+collect-interval: 1
+
+# how many consecutive errors can occur before exiting (0 to disable)
+# default is disabled
+max-consecutive-errors: 0
+
+# skip writing data to influx and print it instead, by default data is written to influx
+dry-run: false
+
+# the path to save the logfile to, by default a logfile is not created
+# logfile-path: logfile.log
+logfile-path: null
+
+# enables logging non-critcial events to stdout, default is disabled
+log-stdout: false
+
+# sets the log level for all logging. may want to use warning in production
+# run with -h for a complete list of levels
+log-level: info
+
+# disables logging critical events to stdout; complete silence
+# default is quiet mode disabled
+quiet: false
+
+# writes a pidfile to the specified location, removed on exit
+# by default a pidfile is not created
+# pidfile: process.pid
+pidfile: null

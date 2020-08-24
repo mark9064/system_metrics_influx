@@ -27,14 +27,18 @@ def find_codename():
 
 
 CODENAME = find_codename()
+RUNNING_AS_ROOT = os.getuid() == 0
 
 
 def main():
     """Main function"""
     if not os.path.exists("configured"):
         os.mkdir("configured")
-    if (hasattr(sys, "real_prefix") or
-            (hasattr(sys, "base_prefix") and sys.base_prefix != sys.prefix)):
+    if RUNNING_AS_ROOT:
+        print("Being run as root, not using sudo")
+        pip_prefix = ""
+    elif (hasattr(sys, "real_prefix") or
+          (hasattr(sys, "base_prefix") and sys.base_prefix != sys.prefix)):
         print("Virtualenv detected, not using sudo for pip installs")
         pip_prefix = ""
     else:
@@ -42,6 +46,11 @@ def main():
         pip_prefix = "sudo "
     required_deps = True
     apt_installed = shutil.which("apt")
+    root_available = True
+    if shutil.which("sudo") is None and not RUNNING_AS_ROOT:
+        print("Sudo is not installed and not being run as root, "
+              "only config options are available")
+        root_available = False
     for item in ["curl", ["pip3", "python3-pip"]]:
         if isinstance(item, list):
             package_name = item[1]
@@ -49,7 +58,7 @@ def main():
         else:
             package_name = item
         if shutil.which(item) is None:
-            if apt_installed:
+            if apt_installed and root_available:
                 print("{0} not installed, installing now".format(item))
                 if not install_package_generic(name=package_name):
                     required_deps = False
@@ -61,7 +70,7 @@ def main():
         print("ERROR: Ubuntu codename not detected."
               "\nPackages will need to be installed manually."
               "\nOnly config options are available")
-    elif required_deps:
+    elif required_deps and root_available:
         print("Ubuntu codename found: {0}".format(CODENAME))
         transport_installed = False
         if answer_convert(input("Install influxdb? (y/n): ")):
@@ -86,11 +95,10 @@ def main():
     if required_deps:
         if answer_convert(input("Install python dependencies? (y/n): ")):
             print("Installing python modules")
-            if not check_retcode(subprocess.run("{0}{1} -m pip install -q -r requirements.txt"
-                                                .format(pip_prefix, sys.executable), shell=True)):
-                print("Error installing python modules")
-            else:
+            if pip_install("-r requirements.txt", pip_prefix):
                 print("Done")
+            else:
+                print("Error installing python modules")
         print("If a new nvidia gpu has been installed, re-setup nvidia gpu support and"
               " reconfigure grafana")
         if answer_convert(input("Setup nvidia GPU support? "
@@ -105,16 +113,19 @@ def main():
     if answer_convert(input("Configure grafana? (y/n): ")):
         ret = setup_grafana()
         print_status("Grafana config", ret)
-    if os.path.isdir("/run/systemd/system/"):
-        print("Systemd detected, can be installed as service")
-        print("You may want to postpone installing as a service until you have "
-              "set up a config file (you must specify a path to a config file for the service, "
-              "but the file does not need to exist yet)")
-        if answer_convert(input("Install as a systemd service? (y/n): ")):
-            ret = systemd_install()
-            print_status("Systemd install", ret)
+    if root_available:
+        if os.path.isdir("/run/systemd/system/"):
+            print("Systemd detected, can be installed as service")
+            print("You may want to postpone installing as a service until you have "
+                  "set up a config file (you must specify a path to a config file for the service, "
+                  "but the file does not need to exist yet)")
+            if answer_convert(input("Install as a systemd service? (y/n): ")):
+                ret = systemd_install()
+                print_status("Systemd install", ret)
+        else:
+            print("Systemd not detected, install as service unavailable")
     else:
-        print("Systemd not detected, install as service unavailable")
+        print("Root/sudo required for systemd install")
     print("Exit")
 
 
@@ -145,29 +156,31 @@ def install_package_generic(name, supported_archs=None, override_codename=CODENA
         os.mkdir("temp_install_debs")
         os.chdir("temp_install_debs")
         print("Downloading {0}".format(name))
-        if not check_retcode(subprocess.run("wget {0}".format(package_link), shell=True)):
+        if not run_command("curl -O {0}".format(package_link), sudo=False):
             print("Failed to download package")
             return False
         deb = os.listdir()[0]
         print("Installing {0}".format(name))
-        if not check_retcode(subprocess.run("sudo dpkg -i {0}".format(deb), shell=True)):
-            print("Package install failed")
-            return False
+        ret = run_command("dpkg -i {1}".format(deb))
         os.remove(deb)
         os.chdir("..")
         os.rmdir("temp_install_debs")
+        if not ret:
+            print("Package install failed")
+            return False
+
     elif install_type == "repo":
         print("Adding key")
-        if not check_retcode(subprocess.run(
-                "sudo curl -sL {0} | sudo apt-key add -".format(key_link), shell=True
-        )):
+        if not run_command(
+                "{0}curl -sL {1} | {0}apt-key add -".format(sudo_prefix(), key_link), sudo=False
+        ):
             print("Failed to add key")
             return False
         print("Adding repo")
-        if not check_retcode(subprocess.run(
-                "echo 'deb {0} {1} {2}' | sudo tee /etc/apt/sources.list.d/{3}.list"
-                .format(repo_link, override_codename, repo_channel, name), shell=True
-        )):
+        if not run_command(
+                "echo 'deb {0} {1} {2}' | {3}tee /etc/apt/sources.list.d/{4}.list"
+                .format(repo_link, override_codename, repo_channel, sudo_prefix(), name), sudo=False
+        ):
             print("Failed to add repo")
         if not apt_install(name):
             print("Error during apt install")
@@ -201,8 +214,7 @@ def setup_nvidia(pip_prefix):
         import py3nvml
     except ImportError:
         print("Installing py3nvml")
-        if not check_retcode(subprocess.run("{0}{1} -q -m pip install py3nvml"
-                                            .format(pip_prefix, sys.executable), shell=True)):
+        if not pip_install("py3nvml", pip_prefix):
             print("Py3nvml install failed")
             return False
     import py3nvml.py3nvml as py3nvml
@@ -236,7 +248,8 @@ def setup_nvidia(pip_prefix):
                 config.main["nvidia_cards"][uuid] = card_name
                 config.main["nvidia_seen_cardnames"][card_name] = 1
     print("All configured cards:")
-    [print("UUID {0}: {1}".format(*pair)) for pair in config.main["nvidia_cards"].items()]
+    for pair in config.main["nvidia_cards"].items():
+        print("UUID {0}: {1}".format(*pair))
     for uuid, name in config.main["nvidia_cards"].items():
         if answer_convert(input("Rename {0}? ({1}) (y/n): ".format(name, uuid))):
             new_name = input("Enter new name for {0}: ".format(name))
@@ -251,22 +264,38 @@ def setup_nvidia(pip_prefix):
 def setup_influxdb():
     """Sets up config for influxdb"""
     print("Starting influxdb")
-    if not check_retcode(subprocess.run("sudo systemctl start influxdb", shell=True)):
+    if not run_command("systemctl start influxdb"):
         print("Influxdb failed to start")
         return False
     try:
         import influxdb
+        import requests.exceptions
     except ImportError:
         print("Influxdb module not found, please install dependencies")
         return False
-    time.sleep(2)
+
     client = influxdb.InfluxDBClient()
-    print("Creating database")
+
     name = input("Enter database name (recommended is 'system_stats'): ")
-    client.create_database(name)
+    print("Creating database... (on slow systems this may take a while, 60s timeout)")
+    start = time.monotonic()
+    while time.monotonic() - 60 < start:
+        try:
+            client.create_database(name)
+        except requests.exceptions.RequestException:
+            time.sleep(5)
+        except (influxdb.exceptions.InfluxDBClientError, influxdb.exceptions.InfluxDBServerError):
+            print("Influxdb could not create the database")
+            return False
+        else:
+            break
+    else:
+        print("Database creation timed out")
+        return False
     retention_time = input("Enter data rentention time. Minimum is 1h."
                            "\nm = minute, h = hour, d = day, w = week, INF for infinity"
                            "\nOnly 1 unit can be used. Recommended is 1w: ")
+    # no need to error check this as if the database creation succeeded the connection should be ok
     client.create_retention_policy("stats_retention", retention_time, 1,
                                    database=name, default=True)
     return True
@@ -277,16 +306,16 @@ def setup_grafana():
     from common_lib import InternalConfig
     template_name = "data/grafana_template.json"
     out_name = "configured/grafana_configured.json"
-    print("Installing plugins")
-    if not check_retcode(subprocess.run("sudo grafana-cli plugins install grafana-clock-panel",
-                                        shell=True)):
-        print("Error installing plugins")
-        return False
-    print("Restarting grafana")
-    subprocess.run("sudo systemctl restart grafana-server", shell=True)
-    if answer_convert(input("Start grafana at boot (using systemd) ? (y/n): ")):
-        subprocess.run("sudo systemctl daemon-reload", shell=True)
-        subprocess.run("sudo systemctl enable grafana-server", shell=True)
+    if answer_convert(input("Install required plugins? (y/n): ")):
+        print("Installing plugins")
+        if not run_command("grafana-cli plugins install grafana-clock-panel"):
+            print("Error installing plugins")
+            return False
+        print("Restarting grafana")
+        run_command("systemctl restart grafana-server")
+    if answer_convert(input("Enable starting grafana at boot (using systemd) ? (y/n): ")):
+        run_command("systemctl daemon-reload")
+        run_command("systemctl enable grafana-server")
     print("Creating configured grafana dashboard")
     try:
         import psutil
@@ -336,39 +365,87 @@ def setup_grafana():
                     out_config["panels"][index - index_shift]["targets"].append(target)
     json.dump(out_config, open(out_name, "w"), indent=2)
     print("Dashboard written to {0}".format(out_name))
+    requests = None
+    try:
+        import requests
+    except ImportError:
+        print("The requests package must be installed to automatically install dashboards")
+        print("Please install dependencies")
+        print("Dashboard auto install skipped as requests is not present")
+        return False
+    if answer_convert(input("Install/update dashboard now? (y/n): ")):
+        print("Starting grafana")
+        run_command("systemctl restart grafana-server")
+        username = input("Enter grafana username (default 'admin'): ")
+        password = input("Enter grafana password (default 'admin'): ")
+        if answer_convert(input("Create datasource? This only needs to be done the "
+                                "the first time the dashboard is installed (y/n): ")):
+            datasource_config = copy.deepcopy(INFLUX_DATASOURCE)
+            datasource_config["user"] = input("Enter influxdb username (default 'root'): ")
+            datasource_config["password"] = input("Enter influxdb password (default 'root'): ")
+            datasource_config["jsonData"]["timeInterval"] = (
+                input("Enter desired data collection interval (default '1s'). "
+                      "Remember to include the unit: ")
+            )
+            datasource_config["database"] = input("Enter influxdb database name "
+                                                  "(default 'system_stats'): ")
+            response = requests.post("http://{0}:{1}@localhost:3000/api/datasources"
+                                     .format(username, password), json=datasource_config)
+            if response.status_code == 200:
+                print("Datasource setup successfully")
+            else:
+                print("Datasource setup failed (grafana returned HTTP code {0})"
+                      .format(response.status_code))
+                print("Debugging information: {0}".format(response.json()))
+                return False
+        datasource_list = requests.get("http://{0}:{1}@localhost:3000/api/datasources"
+                                       .format(username, password))
+        if datasource_list.status_code == 200:
+            print("Current datasources:")
+            for item in datasource_list.json():
+                print(" - {0}".format(item["name"]))
+        else:
+            print("Failed to fetch a list of the current datasources")
+            print("Debugging information: {0}".format(response.json()))
+        datasource = input("Enter datasource name (default is 'InfluxDB'): ")
+        for panel in out_config["panels"]:
+            panel["datasource"] = datasource
+        out_config["__inputs"][0]["name"] = datasource
+        dashboard = dict(dashboard=out_config, folderId=0, overwrite=True)
+        response = requests.post("http://{0}:{1}@localhost:3000/api/dashboards/db"
+                                 .format(username, password), json=dashboard)
+        if response.status_code == 200:
+            print("Install successful\nThe dashboard is located at "
+                  "http://localhost:3000{0}".format(response.json()["url"]))
+        else:
+            print("Dashboard install failed (grafana returned HTTP code {0})"
+                  .format(response.status_code))
+            print("Debugging information: {0}".format(response.json()))
+            return False
     return True
 
 
 def systemd_install():
     """Installs the app as a systemd service"""
-    try:
-        import yaml
-    except ImportError:
-        print("Yaml module not found, please install dependencies")
-        return False
     template_name = "data/systemd_template.txt"
     out_name = "configured/system_metrics_influx.service"
     write_path = "/etc/systemd/system/"
-    path = input("Input path to config file (absolute path): ")
-    try:
-        save_rate = yaml.safe_load(open(path, "r"))["save-rate"]
-    except Exception:
-        save_rate = 1
+    path = expand_path(input("Input path to config file: "))
     current_user = os.getuid()
     data = open(template_name).read()
-    data = data.format(current_user, sys.executable, os.path.abspath("system_metrics_influx.py"),
-                       path, save_rate)
+    data = data.format(current_user, sys.executable, expand_path("system_metrics_influx.py"), path)
     open(out_name, "w").write(data)
     print("Systemd config written to {0}".format(out_name))
     print("The systemd service will be run as user {0} ({1})"
           .format(current_user, pwd.getpwuid(current_user).pw_name))
     if answer_convert(input("Install as service to {0} ? (y/n): ".format(write_path))):
-        subprocess.run("sudo cp {0} {1}".format(out_name, write_path), shell=True)
-        subprocess.run("sudo systemctl daemon-reload", shell=True)
+        run_command("cp {0} {1}".format(out_name, write_path))
+        run_command("systemctl daemon-reload")
         if answer_convert(input("Enable start at boot? (y/n): ")):
-            subprocess.run("sudo systemctl enable system_metrics_influx", shell=True)
+            run_command("systemctl enable system_metrics_influx")
         if answer_convert(input("Start service now? (y/n): ")):
-            subprocess.run("sudo systemctl start system_metrics_influx", shell=True)
+            run_command("systemctl start system_metrics_influx")
+        print("Service name is system_metrics_influx")
         return True
     return False
 
@@ -376,21 +453,43 @@ def systemd_install():
 def apt_install(package):
     """Installs a package using apt"""
     print("Updating apt index")
-    if not check_retcode(subprocess.run("sudo apt-get update -qq", shell=True)):
+    if not run_command("apt-get -qq update"):
         return False
     print("Installing {0}".format(package))
-    if not check_retcode(subprocess.run("sudo apt-get install {0} -qq".format(package),
-                                        shell=True)):
+    return run_command("apt-get -qq install {0}".format(package))
+
+
+def run_command(command, sudo=not RUNNING_AS_ROOT, check_ret=True):
+    """Runs a command with the option to run it as root and check the returncode"""
+    if sudo:
+        command = "sudo {0}".format(command)
+    ret = subprocess.run(command, shell=True, check=False)
+    if not check_ret:
+        return ret
+    if ret.returncode != 0:
         return False
     return True
+
+
+def pip_install(args, pip_prefix):
+    """Installs a pip package"""
+    return check_retcode(
+        subprocess.run("{0}{1} -q -m pip install {2}"
+                       .format(pip_prefix, sys.executable, args), shell=True, check=False)
+    )
 
 
 def check_retcode(process):
     """Checks the process return code"""
-    if process.returncode != 0:
-        return False
-    return True
+    if process.returncode == 0:
+        return True
+    return False
 
+def sudo_prefix():
+    """Returns whether to use sudo by checking if running as root"""
+    if RUNNING_AS_ROOT:
+        return ""
+    return "sudo "
 
 def apt_search(package, install_type):
     """Checks if a package is installed using apt"""
@@ -421,8 +520,14 @@ def answer_convert(ans):
         return True
     return False
 
+def expand_path(path):
+    """Expands a path fully"""
+    return os.path.abspath(os.path.expanduser(path))
 
 PYTHON3_APT = check_apt_module()
+INFLUX_DATASOURCE = {"name": "InfluxDB", "type": "influxdb", "access": "proxy",
+                     "url": "http://localhost:8086", "basicAuth": False, "isDefault": True,
+                     "jsonData": {}, "readOnly": False}
 
 if __name__ == "__main__":
     main()

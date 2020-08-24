@@ -1,5 +1,6 @@
 """Common classes and methods for sharing between installer, main program and plugins"""
 import os
+import time
 import traceback
 
 import yaml
@@ -29,7 +30,7 @@ class InternalConfig:
 
 class BaseStat:
     """Base stats class for shared methods"""
-    save_rate = 0
+    collect_interval = 0
     target_time = 0
 
     @classmethod
@@ -37,13 +38,18 @@ class BaseStat:
         """Sets the target time of the stats collection"""
         cls.target_time = target_time
 
+    @staticmethod
+    def current_time():
+        """Returns the current time for use by plugins"""
+        return time.time()
+
 def format_error(exc_info, message="", message_before=False):
     """Returns a string of formatted exception info"""
     if message:
         if message_before:
             message = "{0}: ".format(message)
         else:
-            message = "- {0}".format(message)
+            message = " - {0}".format(message)
     if exc_info[1] is not None:
         trace = ": {0}".format(exc_info[1])
     else:
@@ -80,4 +86,4 @@ def format_error(exc_info, message="", message_before=False):
         line = ""
     if message_before:
         return "{0}{1}{2}{3}".format(message, exc_info[0].__name__, line, trace)
-    return "{0} {1}{2}{3}".format(exc_info[0].__name__, message, line, trace)
+    return "{0}{1}{2}{3}".format(exc_info[0].__name__, message, line, trace)
