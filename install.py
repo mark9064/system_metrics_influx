@@ -396,7 +396,7 @@ def setup_grafana():
             else:
                 print("Datasource setup failed (grafana returned HTTP code {0})"
                       .format(response.status_code))
-                print("Debugging information: {0}".format(response.json()))
+                print_response_error(response)
                 return False
         datasource_list = requests.get("http://{0}:{1}@localhost:3000/api/datasources"
                                        .format(username, password))
@@ -406,7 +406,7 @@ def setup_grafana():
                 print(" - {0}".format(item["name"]))
         else:
             print("Failed to fetch a list of the current datasources")
-            print("Debugging information: {0}".format(response.json()))
+            print_response_error(datasource_list)
         datasource = input("Enter datasource name (default is 'InfluxDB'): ")
         for panel in out_config["panels"]:
             panel["datasource"] = datasource
@@ -420,7 +420,7 @@ def setup_grafana():
         else:
             print("Dashboard install failed (grafana returned HTTP code {0})"
                   .format(response.status_code))
-            print("Debugging information: {0}".format(response.json()))
+            print_response_error(response)
             return False
     return True
 
@@ -519,6 +519,10 @@ def answer_convert(ans):
     if ans.lower() == "y":
         return True
     return False
+
+def print_response_error(response):
+    """Prints the response text for debugging"""
+    print("Error debugging information: {0}".format(response.text))
 
 def expand_path(path):
     """Expands a path fully"""
