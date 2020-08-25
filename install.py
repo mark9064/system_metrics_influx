@@ -6,6 +6,7 @@ import os
 import io
 import pwd
 import shutil
+import getpass
 import string
 import subprocess
 import sys
@@ -378,12 +379,12 @@ def setup_grafana():
         print("Starting grafana")
         run_command("systemctl restart grafana-server")
         username = input("Enter grafana username (default 'admin'): ")
-        password = input("Enter grafana password (default 'admin'): ")
+        password = getpass.getpass("Enter grafana password (default 'admin'): ")
         if answer_convert(input("Create datasource? This only needs to be done the "
                                 "the first time the dashboard is installed (y/n): ")):
             datasource_config = copy.deepcopy(INFLUX_DATASOURCE)
             datasource_config["user"] = input("Enter influxdb username (default 'root'): ")
-            datasource_config["password"] = input("Enter influxdb password (default 'root'): ")
+            datasource_config["password"] = getpass.getpass("Enter influxdb password (default 'root'): ")
             datasource_config["jsonData"]["timeInterval"] = (
                 input("Enter desired data collection interval (default '1s'). "
                       "Remember to include the unit: ")
