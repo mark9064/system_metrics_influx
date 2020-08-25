@@ -3,6 +3,7 @@
 import copy
 import json
 import os
+import io
 import pwd
 import shutil
 import string
@@ -453,30 +454,31 @@ def systemd_install():
 def apt_install(package):
     """Installs a package using apt"""
     print("Updating apt index")
-    if not run_command("apt-get -qq update"):
+    if not run_command("apt-get update"):
         return False
     print("Installing {0}".format(package))
-    return run_command("apt-get -qq install {0}".format(package))
+    return run_command("apt-get -y install {0}".format(package))
 
 
-def run_command(command, sudo=not RUNNING_AS_ROOT, check_ret=True):
+def run_command(command, sudo=not RUNNING_AS_ROOT):
     """Runs a command with the option to run it as root and check the returncode"""
     if sudo:
         command = "sudo {0}".format(command)
-    ret = subprocess.run(command, shell=True, check=False)
-    if not check_ret:
-        return ret
-    if ret.returncode != 0:
-        return False
-    return True
+    rotations = r"-\|/"
+    rotate_index = 0
+    with subprocess.Popen(command, shell=True, stdout=subprocess.PIPE) as proc:
+        for _ in io.TextIOWrapper(proc.stdout):
+            print("Working {0}".format(rotations[rotate_index]), end="\r", flush=True)
+            rotate_index = (rotate_index + 1) % 4
+    # clear with ansi escape code
+    print("\x1b[2K", end="\r")
+    return check_retcode(proc)
 
 
 def pip_install(args, pip_prefix):
     """Installs a pip package"""
-    return check_retcode(
-        subprocess.run("{0}{1} -q -m pip install {2}"
-                       .format(pip_prefix, sys.executable, args), shell=True, check=False)
-    )
+    return run_command("{0}{1} -m pip install {2}"
+                       .format(pip_prefix, sys.executable, args), sudo=False)
 
 
 def check_retcode(process):
