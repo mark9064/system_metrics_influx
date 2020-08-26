@@ -7,6 +7,7 @@ import io
 import pwd
 import shutil
 import getpass
+import readline
 import string
 import subprocess
 import sys
@@ -278,7 +279,8 @@ def setup_influxdb():
 
     client = influxdb.InfluxDBClient()
 
-    name = input("Enter database name (recommended is 'system_stats'): ")
+    name = prefill_input("Enter database name", "system_stats",
+                         prefill_in_prompt_message="recommended")
     print("Creating database... (on slow systems this may take a while, 60s timeout)")
     start = time.monotonic()
     while time.monotonic() - 60 < start:
@@ -378,19 +380,20 @@ def setup_grafana():
     if answer_convert(input("Install/update dashboard now? (y/n): ")):
         print("Starting grafana")
         run_command("systemctl restart grafana-server")
-        username = input("Enter grafana username (default 'admin'): ")
+        username = prefill_input("Enter grafana username", "admin")
         password = getpass.getpass("Enter grafana password (default 'admin'): ")
         if answer_convert(input("Create datasource? This only needs to be done the "
                                 "the first time the dashboard is installed (y/n): ")):
             datasource_config = copy.deepcopy(INFLUX_DATASOURCE)
-            datasource_config["user"] = input("Enter influxdb username (default 'root'): ")
-            datasource_config["password"] = getpass.getpass("Enter influxdb password (default 'root'): ")
-            datasource_config["jsonData"]["timeInterval"] = (
-                input("Enter desired data collection interval (default '1s'). "
-                      "Remember to include the unit: ")
+            datasource_config["user"] = prefill_input("Enter influxdb username", "root")
+            datasource_config["password"] = (
+                getpass.getpass("Enter influxdb password (default 'root'): ")
             )
-            datasource_config["database"] = input("Enter influxdb database name "
-                                                  "(default 'system_stats'): ")
+            datasource_config["jsonData"]["timeInterval"] = (
+                prefill_input("Enter desired data collection interval including the unit", "1s")
+            )
+            datasource_config["database"] = prefill_input("Enter influxdb database name",
+                                                          "system_stats")
             response = requests.post("http://{0}:{1}@localhost:3000/api/datasources"
                                      .format(username, password), json=datasource_config)
             if response.status_code == 200:
@@ -402,14 +405,21 @@ def setup_grafana():
                 return False
         datasource_list = requests.get("http://{0}:{1}@localhost:3000/api/datasources"
                                        .format(username, password))
+        default_datasource = None
         if datasource_list.status_code == 200:
             print("Current datasources:")
-            for item in datasource_list.json():
-                print(" - {0}".format(item["name"]))
+            datasources = [item["name"] for item in datasource_list.json()]
+            for item in datasources:
+                print(" - {0}".format(item))
+            if "InfluxDB" in datasources:
+                default_datasource = "InfluxDB"
         else:
             print("Failed to fetch a list of the current datasources")
             print_response_error(datasource_list)
-        datasource = input("Enter datasource name (default is 'InfluxDB'): ")
+        if default_datasource:
+            datasource = prefill_input("Enter datasource name", default_datasource)
+        else:
+            datasource = input("Enter datasource name: ")
         for panel in out_config["panels"]:
             panel["datasource"] = datasource
         out_config["__inputs"][0]["name"] = datasource
@@ -493,6 +503,19 @@ def sudo_prefix():
     if RUNNING_AS_ROOT:
         return ""
     return "sudo "
+
+def prefill_input(prompt, prefill, prefill_in_prompt=True, prefill_in_prompt_message="default"):
+    """Prompts with a prefilled input"""
+    if prefill_in_prompt:
+        prompt = "{0} ({1} '{2}'): ".format(prompt, prefill_in_prompt_message, prefill)
+    def hook():
+        readline.insert_text(prefill)
+        readline.redisplay()
+    readline.set_pre_input_hook(hook)
+    try:
+        return input(prompt)
+    finally:
+        readline.set_pre_input_hook()
 
 def apt_search(package, install_type):
     """Checks if a package is installed using apt"""
