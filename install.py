@@ -310,6 +310,7 @@ def setup_grafana():
     from common_lib import InternalConfig
     template_name = "data/grafana_template.json"
     out_name = "configured/grafana_configured.json"
+    grafana_running = False
     if answer_convert(input("Install required plugins? (y/n): ")):
         print("Installing plugins")
         if not run_command("grafana-cli plugins install grafana-clock-panel"):
@@ -317,6 +318,7 @@ def setup_grafana():
             return False
         print("Restarting grafana")
         run_command("systemctl restart grafana-server")
+        grafana_running = True
     if answer_convert(input("Enable starting grafana at boot (using systemd) ? (y/n): ")):
         run_command("systemctl daemon-reload")
         run_command("systemctl enable grafana-server")
@@ -378,8 +380,9 @@ def setup_grafana():
         print("Dashboard auto install skipped as requests is not present")
         return False
     if answer_convert(input("Install/update dashboard now? (y/n): ")):
-        print("Starting grafana")
-        run_command("systemctl restart grafana-server")
+        if not grafana_running:
+            print("Starting grafana")
+            run_command("systemctl restart grafana-server")
         username = prefill_input("Enter grafana username", "admin")
         password = getpass.getpass("Enter grafana password (default 'admin'): ")
         if answer_convert(input("Create datasource? This only needs to be done the "
