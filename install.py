@@ -563,4 +563,5 @@ INFLUX_DATASOURCE = {"name": "InfluxDB", "type": "influxdb", "access": "proxy",
                      "jsonData": {}, "readOnly": False}
 
 if __name__ == "__main__":
+    os.chdir(os.path.dirname(os.path.abspath(__file__)))
     main()

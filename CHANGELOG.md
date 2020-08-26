@@ -6,6 +6,7 @@ Unreleased
 * Passwords are no longer echoed back in the installer
 * Installer prompts are prefilled with default values where appropriate
 * Installer no longer starts Grafana if it was already started earlier in the install process
+* Installer makes sure it is in the correct directory
 
 1.0.0
 
